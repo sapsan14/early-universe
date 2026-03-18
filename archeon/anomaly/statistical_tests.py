@@ -91,7 +91,7 @@ class NonGaussianityResult:
     is_gaussian: bool        # both p > 0.05
 
 
-def test_non_gaussianity(
+def check_non_gaussianity(
     cmb_map: np.ndarray,
 ) -> NonGaussianityResult:
     """Test for non-Gaussianity using skewness and kurtosis.

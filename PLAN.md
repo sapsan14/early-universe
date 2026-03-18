@@ -649,20 +649,20 @@ INSTRUCTIONS.md              # Инструкции для LLM
 | uncertainty-calibration | [MC Dropout](KNOWLEDGE.md#mc-dropout), [Deep Ensembles](KNOWLEDGE.md#deep-ensembles), калибровка неопределённости | 3 | **done** |
 | inverse-validation | Эксперименты: Synthetic->Synthetic, Synthetic->Real, noise robustness | 4 | **done** |
 | inverse-comparison | Сравнение с MCMC и Planck published values (ключевой результат) | 4 | **done** |
-| cmb-autoencoder | [Autoencoder](KNOWLEDGE.md#autoencoder) для CMB-карт (детектор аномалий) | 5 | pending |
-| anomaly-detection | Поиск аномалий: [Cold Spot](KNOWLEDGE.md#cold-spot), [негауссовость](KNOWLEDGE.md#non-gaussianity), статистические тесты | 5 | pending |
-| universe-compression | [VAE](KNOWLEDGE.md#vae) для сжатия, [latent space](KNOWLEDGE.md#latent-space) анализ, интерпретация | 5 | pending |
-| neural-emulator | [Эмулятор](KNOWLEDGE.md#emulator) CMB спектра: обучение на CLASS, предсказание C_l за ~1ms | 6 | pending |
-| fno-structure | [FNO](KNOWLEDGE.md#fno) для предсказания [формирования структур](KNOWLEDGE.md#structure-formation) | 6 | pending |
-| nbody-engine | [N-Body](KNOWLEDGE.md#nbody) движок на JAX: Barnes-Hut/PM | 6 | pending |
-| fastapi-service | [FastAPI](KNOWLEDGE.md#fastapi): inference, anomalies, simulations endpoints | 7 | pending |
-| webgpu-engine | [WebGPU](KNOWLEDGE.md#webgpu) renderer: compute shaders для частиц | 7 | pending |
-| cosmic-time-machine | Cosmic Time Machine UI: таймлайн Вселенной | 7 | pending |
-| playable-universe | Playable Universe: sandbox с изменением констант | 7 | pending |
-| parameter-explorer | Parameter Explorer: слайдеры + мгновенный пересчёт | 7 | pending |
-| anomaly-map | Интерактивная карта аномалий CMB | 7 | pending |
-| alternative-cosmologies | [f(R)](KNOWLEDGE.md#f-r-gravity), вариация констант, циклические модели | 8 | pending |
-| academic-engine | LaTeX экспорт, BibTeX, автогенерация ноутбуков | 8 | pending |
+| cmb-autoencoder | [Autoencoder](KNOWLEDGE.md#autoencoder) для CMB-карт (детектор аномалий) | 5 | **done** |
+| anomaly-detection | Поиск аномалий: [Cold Spot](KNOWLEDGE.md#cold-spot), [негауссовость](KNOWLEDGE.md#non-gaussianity), статистические тесты | 5 | **done** |
+| universe-compression | [VAE](KNOWLEDGE.md#vae) для сжатия, [latent space](KNOWLEDGE.md#latent-space) анализ, интерпретация | 5 | **done** |
+| neural-emulator | [Эмулятор](KNOWLEDGE.md#emulator) CMB спектра: обучение на CLASS, предсказание C_l за ~1ms | 6 | **done** |
+| fno-structure | [FNO](KNOWLEDGE.md#fno) для предсказания [формирования структур](KNOWLEDGE.md#structure-formation) | 6 | **done** |
+| pinn-friedmann | [PINN](KNOWLEDGE.md#pinn) для уравнений Фридмана + универсальный тренировочный цикл | 6 | **done** |
+| fastapi-service | [FastAPI](KNOWLEDGE.md#fastapi): inference, anomalies, simulations endpoints | 7 | **done** |
+| webgpu-engine | [WebGPU](KNOWLEDGE.md#webgpu) renderer: compute shaders для частиц | 7 | **done** |
+| cosmic-time-machine | Cosmic Time Machine UI: таймлайн Вселенной | 7 | **done** |
+| playable-universe | Playable Universe: sandbox с изменением констант | 7 | **done** |
+| parameter-explorer | Parameter Explorer: слайдеры + мгновенный пересчёт | 7 | **done** |
+| anomaly-map | Интерактивная карта аномалий CMB | 7 | **done** |
+| alternative-cosmologies | [f(R)](KNOWLEDGE.md#f-r-gravity), вариация констант, циклические модели | 8 | **done** |
+| academic-engine | LaTeX экспорт, BibTeX, автогенерация ноутбуков | 8 | **done** |
 | arxiv-paper | Написание arXiv preprint: Neural Inference of Cosmological Parameters | 9 | pending |
 | docker-devops | Docker Compose, CI/CD, GitHub Actions | 9 | pending |
 | documentation | README, API docs, tutorial notebooks, демо-сайт | 9 | pending |
