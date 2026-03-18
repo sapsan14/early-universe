@@ -31,5 +31,11 @@ Thumbs.db
 # Node
 node_modules/
 
+# Vite
+.vite/
+
+# Windows zone identifiers
+*.Zone.Identifier
+
 # Jupyter
 .ipynb_checkpoints/
