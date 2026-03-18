@@ -1,0 +1,37 @@
+# DVC (Data Version Control) pipeline definition
+# Tracks data lineage: parameters -> synthetic data -> training -> model
+# Run: dvc repro (to reproduce entire pipeline)
+# Run: dvc push (to upload data to remote storage)
+
+stages:
+  generate_training_data:
+    cmd: >
+      python -c "
+      from archeon.data.synthetic import generate_dataset, save_dataset;
+      ds = generate_dataset(n_samples=1000, nside=64, lmax=192, method='lhs', seed=42);
+      save_dataset(ds, 'data/synthetic/train_1k_nside64.h5')
+      "
+    params:
+      - params.yaml:
+          - synthetic.n_samples
+          - synthetic.nside
+          - synthetic.lmax
+          - synthetic.method
+          - synthetic.seed
+    outs:
+      - data/synthetic/train_1k_nside64.h5
+
+  generate_validation_data:
+    cmd: >
+      python -c "
+      from archeon.data.synthetic import generate_dataset, save_dataset;
+      ds = generate_dataset(n_samples=200, nside=64, lmax=192, method='lhs', seed=123);
+      save_dataset(ds, 'data/synthetic/val_200_nside64.h5')
+      "
+    params:
+      - params.yaml:
+          - synthetic.n_samples_val
+          - synthetic.nside
+          - synthetic.seed_val
+    outs:
+      - data/synthetic/val_200_nside64.h5

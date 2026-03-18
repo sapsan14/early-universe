@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archeon"
+version = "0.1.0"
+description = "Computational platform for Early Universe simulation and cosmological parameter inference"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "ARCHEON Contributors"},
+]
+keywords = ["cosmology", "CMB", "machine-learning", "JAX", "physics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "jax>=0.4.30",
+    "jaxlib>=0.4.30",
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "pyyaml>=6.0",
+    "healpy>=1.17",
+    "astropy>=6.0",
+    "matplotlib>=3.8",
+    "h5py>=3.10",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch>=2.2",
+    "emcee>=3.1",
+    "corner>=2.2",
+]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "pydantic>=2.6",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+]
+all = ["archeon[ml,api,dev]"]
+
+[tool.setuptools.packages.find]
+include = ["archeon*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]

@@ -1,0 +1,12 @@
+# DVC parameter file — change these to regenerate data
+synthetic:
+  n_samples: 1000
+  n_samples_val: 200
+  nside: 64
+  lmax: 192
+  method: lhs
+  seed: 42
+  seed_val: 123
+  backend: internal
+  add_noise: false
+  noise_level_uK: 5.0
