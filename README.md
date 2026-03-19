@@ -302,6 +302,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-**Author:** Anton Sokolovas
+**Author:** Anton Sokolov
 
 *Built with JAX, curiosity, and a desire to understand the first moments of the Universe.*
