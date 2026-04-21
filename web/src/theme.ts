@@ -50,9 +50,13 @@ export const theme = {
     lineStrong: "rgba(159, 144, 240, 0.35)",
   },
   font: {
-    serif: "'Iowan Old Style', 'Palatino Linotype', 'Cambria', 'Georgia', serif",
-    sans: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
-    mono: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
+    // Cormorant Garamond gives chapter narrative its "schoolbook" feel.
+    serif: "'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', 'Cambria', 'Georgia', serif",
+    // IBM Plex Sans — body/UI default. Full Cyrillic + Latin coverage.
+    sans: "'IBM Plex Sans', 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif",
+    // Space Grotesk — numbers, metrics, data. Has nice tabular lining figures;
+    // consumers should also pair it with font-variant-numeric: tabular-nums.
+    mono: "'Space Grotesk', 'IBM Plex Sans', system-ui, monospace",
     math: "'Cambria Math', 'STIX Two Math', 'Latin Modern Math', 'Times New Roman', serif",
   },
   radius: {
