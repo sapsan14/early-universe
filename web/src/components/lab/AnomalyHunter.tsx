@@ -67,7 +67,7 @@ export function AnomalyHunter() {
   const { pick, t } = useT();
   const [size] = useState(96);
   const [contamination, setContamination] = useState(1);
-  const [seed, setSeed] = useState(1);
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e6));
   const [map, setMap] = useState<number[][] | null>(null);
   const [result, setResult] = useState<AnomalyResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,25 +75,29 @@ export function AnomalyHunter() {
   const [threshold, setThreshold] = useState(3.0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Regenerate map whenever seed or contamination changes.
+  useEffect(() => {
+    setMap(generateMap(size, seed, contamination));
+  }, [size, seed, contamination]);
+
   const regen = useCallback(() => {
-    const newMap = generateMap(size, Math.floor(Math.random() * 1e6), contamination);
-    setMap(newMap);
-    setSeed((s) => s + 1);
-    setResult(null);
-  }, [size, contamination]);
+    setSeed(Math.floor(Math.random() * 1e6));
+  }, []);
 
-  useEffect(() => { regen(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const analyze = useCallback(async () => {
+  // Auto-run the detector whenever map or threshold changes (debounced).
+  useEffect(() => {
     if (!map) return;
-    setLoading(true);
-    try {
-      const r = await post<AnomalyResponse>("/api/v1/anomalies", { map_data: map, threshold });
-      setResult(r); setUsingApi(true);
-    } catch {
-      setResult(localAnomaly(map, threshold)); setUsingApi(false);
-    }
-    setLoading(false);
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const r = await post<AnomalyResponse>("/api/v1/anomalies", { map_data: map, threshold });
+        setResult(r); setUsingApi(true);
+      } catch {
+        setResult(localAnomaly(map, threshold)); setUsingApi(false);
+      }
+      setLoading(false);
+    }, 180);
+    return () => clearTimeout(timer);
   }, [map, threshold]);
 
   // Render map + overlays
@@ -174,11 +178,13 @@ export function AnomalyHunter() {
               }}
             />
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-            <Button variant="soft" onClick={regen}>🎲 {pick({ ru: "Новая карта", en: "New map" })}</Button>
-            <Button variant="primary" onClick={analyze} disabled={loading}>
-              {loading ? pick({ ru: "Сканирую…", en: "Scanning…" }) : pick({ ru: "🔍 Запустить детектор", en: "🔍 Run detector" })}
-            </Button>
+          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <Button variant="primary" onClick={regen}>🎲 {pick({ ru: "Новая карта", en: "New map" })}</Button>
+            <span style={{ fontSize: 12, color: theme.color.inkDim }}>
+              {loading
+                ? pick({ ru: "Сканирую…", en: "Scanning…" })
+                : pick({ ru: "Детектор работает автоматически — двигай порог и уровень загрязнения.", en: "Detector runs automatically — move the threshold and contamination sliders." })}
+            </span>
           </div>
         </Card>
 
@@ -213,9 +219,6 @@ export function AnomalyHunter() {
             caption={p("Сколько искусственных аномалий впрыснуть в карту перед сканом.", "How many fake anomalies to inject before scanning.")}
             precision={0}
           />
-          <Button variant="soft" full onClick={regen} style={{ marginTop: 8 }}>
-            {pick({ ru: "Сгенерировать новую карту", en: "Generate new map" })}
-          </Button>
         </Card>
 
         {result && (

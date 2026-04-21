@@ -17,27 +17,32 @@ export function UniverseGarden() {
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [usingApi, setUsingApi] = useState(false);
+  const [seed, setSeed] = useState(42);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const simulate = useCallback(async () => {
     setLoading(true);
+    let result: PlayableResponse;
     try {
-      const r = await post<PlayableResponse>("/api/v1/simulations/playable", {
-        params, grid_size: 96, n_steps: 12, seed: 42,
+      result = await post<PlayableResponse>("/api/v1/simulations/playable", {
+        params, grid_size: 96, n_steps: 12, seed,
       });
-      setData(r); setUsingApi(true);
+      setUsingApi(true);
     } catch {
-      setData(localPlayable(params, 96, 12)); setUsingApi(false);
+      result = localPlayable(params, 96, 12, seed);
+      setUsingApi(false);
     }
-    setFrame(0);
+    setData(result);
+    setFrame(result.snapshots.length - 1); // show the final "grown" state
+    setPlaying(false);
     setLoading(false);
-  }, [params]);
+  }, [params, seed]);
 
-  // initial run
+  // Auto-regenerate (debounced) whenever parameters change so sliders feel alive.
   useEffect(() => {
-    if (!data) simulate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timer = setTimeout(() => { simulate(); }, 250);
+    return () => clearTimeout(timer);
+  }, [simulate]);
 
   // animation
   useEffect(() => {
@@ -103,8 +108,8 @@ export function UniverseGarden() {
           <Badge tone="nova" glyph="🌀">{pick({ ru: "Играбельная Вселенная", en: "Playable Universe" })}</Badge>
           <p style={{ color: theme.color.inkSoft, fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
             {pick({
-              ru: <>Поставь параметры — нажми «Создать Вселенную». На экране запустится симуляция роста структур. Внизу — слайдер времени.</>,
-              en: <>Set parameters and hit "Create Universe". A structure-growth simulation runs in the panel. The slider below scrubs time.</>,
+              ru: <>Двигай слайдеры — симуляция пересчитывается автоматически. Показываем финальный кадр; ползунок времени внизу прокручивает рост.</>,
+              en: <>Move the sliders — the simulation auto-regenerates. The final frame is shown; scrub the time slider below to replay the growth.</>,
             })}
           </p>
         </Card>
@@ -142,8 +147,8 @@ export function UniverseGarden() {
           termId="n-s"
         />
 
-        <Button variant="primary" full onClick={simulate} disabled={loading}>
-          {loading ? pick({ ru: "Создаю Вселенную…", en: "Creating Universe…" }) : pick({ ru: "✺ Создать Вселенную", en: "✺ Create Universe" })}
+        <Button variant="primary" full onClick={() => setSeed(Math.floor(Math.random() * 1_000_000))} disabled={loading}>
+          {loading ? pick({ ru: "Пересчитываю…", en: "Recomputing…" }) : pick({ ru: "🎲 Бросить новый мир", en: "🎲 Re-roll the world" })}
         </Button>
         <Button variant="soft" full onClick={() => setParams({ ...DEFAULT_PARAMS })}>
           {pick({ ru: "Сброс к Planck 2018", en: "Reset to Planck 2018" })}

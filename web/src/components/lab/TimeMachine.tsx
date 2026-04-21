@@ -122,7 +122,7 @@ export function TimeMachine() {
           </div>
 
           {/* Custom timeline visualization */}
-          <div style={{ position: "relative", padding: "20px 0 60px" }}>
+          <div style={{ position: "relative", padding: "20px 0 90px" }}>
             <div aria-hidden style={{
               position: "absolute", left: 0, right: 0, top: 26,
               height: 12, borderRadius: 999,
@@ -161,34 +161,53 @@ export function TimeMachine() {
               pointerEvents: "none",
             }}>{localEpochDef.glyph}</div>
 
-            {/* Epoch markers */}
-            <div style={{
-              position: "absolute", left: 0, right: 0, top: 50,
-              display: "flex", justifyContent: "space-between",
-              fontSize: 11,
-            }}>
+            {/* Epoch tick marks */}
+            <div aria-hidden style={{ position: "absolute", left: 0, right: 0, top: 44, height: 6, pointerEvents: "none" }}>
               {EPOCH_DEFS.map((e) => {
+                const pos = (((e.log_t_min + e.log_t_max) / 2) - MIN_LT) / (MAX_LT - MIN_LT);
+                return (
+                  <div key={`tick-${e.id}`} style={{
+                    position: "absolute",
+                    left: `${pos * 100}%`,
+                    width: 2, height: 6,
+                    background: e.id === localEpochDef.id ? e.color : "rgba(159, 144, 240, 0.55)",
+                    transform: "translateX(-50%)",
+                    borderRadius: 1,
+                  }} />
+                );
+              })}
+            </div>
+            {/* Epoch markers — click-to-snap, alternating two rows for readability */}
+            <div style={{ position: "absolute", left: 0, right: 0, top: 54, height: 44, pointerEvents: "none" }}>
+              {EPOCH_DEFS.map((e, i) => {
                 const center = (e.log_t_min + e.log_t_max) / 2;
                 const pos = (center - MIN_LT) / (MAX_LT - MIN_LT);
+                const row = i % 2;
+                const isActive = e.id === localEpochDef.id;
                 return (
                   <button
                     key={e.id}
                     onClick={() => setLogT(center)}
+                    title={t(e.name)}
                     style={{
                       position: "absolute",
                       left: `${pos * 100}%`,
+                      top: row * 20,
                       transform: "translateX(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      color: e.id === localEpochDef.id ? e.color : theme.color.inkSoft,
+                      background: isActive ? "rgba(255, 213, 107, 0.14)" : "transparent",
+                      border: isActive ? `1px solid ${e.color}` : "1px solid transparent",
+                      borderRadius: 999,
+                      color: isActive ? e.color : theme.color.inkSoft,
                       cursor: "pointer",
                       whiteSpace: "nowrap",
                       fontSize: 10.5,
-                      fontWeight: e.id === localEpochDef.id ? 700 : 400,
-                      padding: 0,
+                      fontWeight: isActive ? 700 : 500,
+                      padding: "2px 8px",
+                      pointerEvents: "auto",
+                      transition: theme.motion.snap,
                     }}
                   >
-                    {t(e.name).split(" ").slice(0, 2).join(" ")}
+                    {t(e.short)}
                   </button>
                 );
               })}
@@ -217,7 +236,7 @@ export function TimeMachine() {
                 <div style={{ color: theme.color.inkSoft, fontSize: 12, marginBottom: 6 }}>
                   {row.term ? <Term id={row.term}>{row.label}</Term> : row.label}
                 </div>
-                <div style={{ fontFamily: theme.font.mono, color: theme.color.starlight, fontSize: 17, fontWeight: 600 }}>
+                <div style={{ fontFamily: theme.font.mono, color: theme.color.starlight, fontSize: 15, fontWeight: 600, wordBreak: "break-word", lineHeight: 1.35 }}>
                   {row.value}
                 </div>
               </div>

@@ -21,6 +21,8 @@ export interface EpochDef {
   log_t_min: number;
   log_t_max: number;
   name: Phrase;
+  /** Very short tick label for the timeline ruler (3-8 chars). */
+  short: Phrase;
   description: Phrase;
   key_processes: Phrase[];
   dominant: "quantum_fields" | "inflaton_field" | "radiation" | "matter" | "dark_energy";
@@ -33,6 +35,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "planck",
     log_t_min: -43.5, log_t_max: -36,
     name: { ru: "Планковская эпоха", en: "Planck Epoch" },
+    short: { ru: "Планк", en: "Planck" },
     description: {
       ru: "Все четыре фундаментальные силы — электромагнитная, слабая, сильная и гравитация — слиты в одну. Привычная физика молчит.",
       en: "All four fundamental forces — electromagnetism, weak, strong and gravity — are fused into one. Familiar physics falls silent.",
@@ -49,6 +52,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "inflation",
     log_t_min: -36, log_t_max: -32,
     name: { ru: "Инфляция", en: "Inflation" },
+    short: { ru: "Инфл.", en: "Inflation" },
     description: {
       ru: "Пространство мгновенно растягивается в e⁶⁰ ≈ 10²⁶ раз. Из квантовой ряби рождаются зародыши будущих галактик.",
       en: "Space is stretched by a factor of e⁶⁰ ≈ 10²⁶ in an instant. Quantum ripples seed every future galaxy.",
@@ -66,6 +70,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "reheating",
     log_t_min: -32, log_t_max: -10,
     name: { ru: "Подогрев и кварковая эпоха", en: "Reheating & Quark Epoch" },
+    short: { ru: "Кварки", en: "Quarks" },
     description: {
       ru: "Энергия инфлатона переходит в фонтан частиц. Кварк-глюонная плазма раскалена до триллионов градусов.",
       en: "Inflaton energy converts into a fountain of particles. Quark–gluon plasma blazes at trillions of kelvin.",
@@ -83,6 +88,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "qcd",
     log_t_min: -10, log_t_max: -4,
     name: { ru: "Кварк-глюонный переход", en: "QCD Phase Transition" },
+    short: { ru: "QCD", en: "QCD" },
     description: {
       ru: "Кварки запираются в протоны и нейтроны. Температура около 1.7 × 10¹² K.",
       en: "Quarks become confined inside protons and neutrons. Temperature ≈ 1.7 × 10¹² K.",
@@ -99,6 +105,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "bbn",
     log_t_min: -4, log_t_max: 3,
     name: { ru: "Первичный нуклеосинтез", en: "Big Bang Nucleosynthesis" },
+    short: { ru: "BBN", en: "BBN" },
     description: {
       ru: "За три минуты сваривается кухня лёгких ядер: ~75% водорода, ~25% гелия-4, следы дейтерия и лития.",
       en: "In three minutes the cosmic kitchen forges ~75% hydrogen, ~25% helium-4, with trace deuterium and lithium.",
@@ -116,6 +123,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "equality",
     log_t_min: 3, log_t_max: 11,
     name: { ru: "Равенство материи и излучения", en: "Matter–Radiation Equality" },
+    short: { ru: "Mатер.=изл.", en: "M–R eq." },
     description: {
       ru: "Плотность вещества догоняет плотность излучения (z ≈ 3400). Гравитация наконец берёт верх над давлением света.",
       en: "Matter density catches up with radiation (z ≈ 3400). Gravity finally outmuscles light pressure.",
@@ -132,6 +140,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "cmb",
     log_t_min: 11, log_t_max: 13,
     name: { ru: "Рекомбинация / выпуск CMB", en: "Recombination / CMB Release" },
+    short: { ru: "CMB", en: "CMB" },
     description: {
       ru: "Электроны соединяются с ядрами в нейтральный водород. Свет освобождается — мы наблюдаем его сегодня как реликтовое излучение.",
       en: "Electrons bind with nuclei into neutral hydrogen. Light breaks free — today we see it as the cosmic microwave background.",
@@ -149,6 +158,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "dark-ages",
     log_t_min: 13, log_t_max: 15.5,
     name: { ru: "Тёмные века", en: "Dark Ages" },
+    short: { ru: "Тёмн. века", en: "Dark Ages" },
     description: {
       ru: "Звёзд ещё нет. Тёмная материя строит каркас гравитационных колодцев, в которые стекает водород.",
       en: "No stars yet. Dark matter builds the gravitational scaffolding into which hydrogen pours.",
@@ -165,6 +175,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "dawn",
     log_t_min: 15.5, log_t_max: 16.3,
     name: { ru: "Космический рассвет", en: "Cosmic Dawn" },
+    short: { ru: "Рассвет", en: "Dawn" },
     description: {
       ru: "Загораются первые звёзды (Population III). Ультрафиолетом они вновь ионизируют межгалактический водород.",
       en: "The very first stars (Population III) ignite. Their UV light reionizes the intergalactic hydrogen.",
@@ -182,6 +193,7 @@ export const EPOCH_DEFS: EpochDef[] = [
     id: "now",
     log_t_min: 16.3, log_t_max: 17.7,
     name: { ru: "Современная Вселенная", en: "Present-day Universe" },
+    short: { ru: "Сейчас", en: "Now" },
     description: {
       ru: "Сложилась паутина галактик, скоплений и войдов. Тёмная энергия снова разгоняет расширение.",
       en: "The cosmic web of galaxies, clusters and voids is in place. Dark energy is once again accelerating expansion.",
@@ -270,23 +282,41 @@ export function localSpectrum(params: CosmoParams, lMax = 2500): SpectrumRespons
 
   const A = Math.exp(params.ln10As) * 1e-10;
   const ns = params.n_s;
-  // Acoustic peak position roughly scales with sqrt(Omega_m h^2)
   const h = params.H0 / 100;
   const omegaMh2 = params.Omega_b_h2 + params.Omega_cdm_h2;
-  const lA = 220 * Math.sqrt(0.143 / Math.max(omegaMh2, 0.05));
-  // Damping scale sensitive to Omega_b
-  const lD = 1500 * Math.sqrt(0.022 / Math.max(params.Omega_b_h2, 0.005));
-  // Reionisation suppression at low ell
+  // Angular acoustic scale ℓ_A = π D_A / r_s. Both scales depend on cosmology;
+  // we capture the two strongest effects: lower H0 pushes the peaks to smaller ℓ
+  // (larger angular size), and larger Omega_m h² shrinks the sound horizon.
+  const lA_ref = 301; // Planck 2018 ≈ 301
+  const h_ref = 0.6736;
+  const omh2_ref = 0.143;
+  const lA = lA_ref * (h / h_ref) ** 0.4 * Math.sqrt(omh2_ref / Math.max(omegaMh2, 0.05));
+  // Silk damping scale
+  const lD = 1500 * Math.sqrt(0.022 / Math.max(params.Omega_b_h2, 0.005)) * (h / h_ref) ** 0.3;
+  // Baryon drag boosts odd peaks (1st, 3rd) relative to even (2nd).
+  const R = params.Omega_b_h2 / 0.0224;
+  const oddBoost = Math.pow(R, 0.35);
+  const evenBoost = Math.pow(R, -0.15);
+  // Dark-matter driving lifts the first peak and suppresses very-low-ℓ plateau.
+  const cdmBoost = Math.pow(params.Omega_cdm_h2 / 0.12, 0.25);
+  // Low-ℓ suppression from reionization
   const supp = Math.exp(-2 * params.tau_reio);
+  // Reionization bump at ℓ ~ 5–10
+  const reioBump = params.tau_reio * 0.8;
 
   for (let l = 2; l <= lMax; l += Math.max(1, Math.floor(l / 60))) {
-    const tilt = Math.pow(l / 220, ns - 1);
-    // 3 main acoustic peaks with decreasing amplitude
-    const peaks =
-      Math.exp(-((l - lA) ** 2) / (2 * (lA * 0.18) ** 2)) +
-      0.55 * Math.exp(-((l - 2 * lA) ** 2) / (2 * (lA * 0.18) ** 2)) +
-      0.32 * Math.exp(-((l - 3 * lA) ** 2) / (2 * (lA * 0.18) ** 2));
-    const sw = 0.6 / (1 + l / 30); // Sachs-Wolfe plateau
+    const tilt = Math.pow(l / 200, ns - 1);
+    const width = lA * 0.17;
+    const p1 = oddBoost * cdmBoost *
+      Math.exp(-((l - lA) ** 2) / (2 * width ** 2));
+    const p2 = 0.55 * evenBoost *
+      Math.exp(-((l - 2 * lA) ** 2) / (2 * width ** 2));
+    const p3 = 0.32 * oddBoost *
+      Math.exp(-((l - 3 * lA) ** 2) / (2 * width ** 2));
+    const p4 = 0.18 * evenBoost *
+      Math.exp(-((l - 4 * lA) ** 2) / (2 * width ** 2));
+    const peaks = p1 + p2 + p3 + p4;
+    const sw = 0.6 / (1 + l / 30) + reioBump / (1 + ((l - 6) / 4) ** 2);
     const damping = Math.exp(-((l / lD) ** 1.8));
     const dl = A * 5e10 * tilt * (sw + 1.6 * peaks) * damping * supp;
     const clVal = (2 * Math.PI * dl) / Math.max(l * (l + 1), 1);
@@ -297,13 +327,13 @@ export function localSpectrum(params: CosmoParams, lMax = 2500): SpectrumRespons
 }
 
 /** Toy density field that grows over "time" and responds to A_s, n_s, Omega. */
-export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10): PlayableResponse {
+export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10, seed0 = 1234): PlayableResponse {
   const snapshots: number[][][] = [];
   const redshifts: number[] = [];
   const scaleFactors: number[] = [];
 
   // Seeded noise
-  let seed = 1234;
+  let seed = seed0 >>> 0;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 0xffffffff;
@@ -340,6 +370,8 @@ export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10): 
 
   const amp = Math.exp(params.ln10As - 3.044) ** 2;
   const omega = params.Omega_cdm_h2 / 0.12;
+  // Faster expansion (larger H0) reduces how much time structures have to grow.
+  const expansionDrag = Math.pow(67.36 / Math.max(params.H0, 30), 0.5);
   let std = 0;
   let mean = 0;
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) mean += smoothed[y][x];
@@ -349,7 +381,7 @@ export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10): 
 
   for (let step = 0; step < nSteps; step++) {
     const t = (step + 1) / nSteps;
-    const growth = amp * omega * t ** 1.5; // delta ∝ a in matter era
+    const growth = amp * omega * expansionDrag * t ** 1.5; // delta ∝ a in matter era
     const snap: number[][] = [];
     for (let y = 0; y < N; y++) {
       const row: number[] = [];
