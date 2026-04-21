@@ -173,8 +173,8 @@ export function ParameterStudio() {
         </Card>
 
         <ParamSlider
-          label={p("Хаббл H₀", "Hubble H₀")}
-          symbol="H₀" unit="km/s/Mpc"
+          label={p("Хаббл", "Hubble")}
+          symbol="H_0" unit="km/s/Mpc"
           termId="hubble"
           value={params.H0} min={50} max={100} step={0.1}
           onChange={(v) => setParams((p) => ({ ...p, H0: v }))}
@@ -183,8 +183,8 @@ export function ParameterStudio() {
           caption={p("Скорость расширения сегодня. Загадка H₀ — Planck и HST спорят на 7%.", "Today's expansion rate. The H₀ tension — Planck and HST disagree by ~7%.")}
         />
         <ParamSlider
-          label={p("Барионы Ω_b h²", "Baryons Ω_b h²")}
-          symbol="Ω_b h²"
+          label={p("Барионы", "Baryons")}
+          symbol="\\Omega_b h^2"
           termId="omega-b-h2"
           value={params.Omega_b_h2} min={0.015} max={0.030} step={0.0005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_b_h2: v }))}
@@ -192,8 +192,8 @@ export function ParameterStudio() {
           caption={p("Сколько обычного вещества. Управляет балансом первого/второго пика.", "Amount of ordinary matter. Sets the first/second peak balance.")}
         />
         <ParamSlider
-          label={p("Тёмная материя Ω_cdm h²", "Dark matter Ω_cdm h²")}
-          symbol="Ω_cdm h²"
+          label={p("Тёмная материя", "Dark matter")}
+          symbol="\\Omega_{\\rm cdm} h^2"
           termId="omega-cdm-h2"
           value={params.Omega_cdm_h2} min={0.05} max={0.20} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_cdm_h2: v }))}
@@ -201,7 +201,7 @@ export function ParameterStudio() {
           caption={p("Невидимая «опора» структур. Сдвигает все пики горизонтально.", "Invisible 'scaffolding' for structure. Shifts every peak horizontally.")}
         />
         <ParamSlider
-          label={p("Наклон n_s", "Tilt n_s")}
+          label={p("Наклон", "Tilt")}
           symbol="n_s"
           termId="n-s"
           value={params.n_s} min={0.85} max={1.10} step={0.005}
@@ -211,8 +211,8 @@ export function ParameterStudio() {
           caption={p("n_s = 1 — все масштабы равны. n_s < 1 — больше крупных пятен.", "n_s = 1 — all scales equal. n_s < 1 — more big patches.")}
         />
         <ParamSlider
-          label={p("Амплитуда A_s", "Amplitude A_s")}
-          symbol="ln(10¹⁰ A_s)"
+          label={p("Амплитуда", "Amplitude")}
+          symbol="\\ln(10^{10}\\, A_s)"
           termId="a-s"
           value={params.ln10As} min={2.4} max={3.8} step={0.02}
           onChange={(v) => setParams((p) => ({ ...p, ln10As: v }))}
@@ -220,8 +220,8 @@ export function ParameterStudio() {
           caption={p("Громкость инфляционного шёпота. Поднимает спектр выше.", "Loudness of the inflation whisper. Lifts the whole spectrum.")}
         />
         <ParamSlider
-          label={p("Реионизация τ", "Reionization τ")}
-          symbol="τ_reio"
+          label={p("Реионизация", "Reionization")}
+          symbol="\\tau_{\\rm reio}"
           termId="tau"
           value={params.tau_reio} min={0.01} max={0.15} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, tau_reio: v }))}

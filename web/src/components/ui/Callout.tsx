@@ -52,16 +52,16 @@ export function Callout({
         display: "flex",
         alignItems: "center",
         gap: 10,
-        marginBottom: 6,
+        marginBottom: 8,
         fontFamily: theme.font.serif,
         color: s.color,
         fontWeight: 700,
         letterSpacing: 0.5,
       }}>
-        <span aria-hidden style={{ fontSize: 18, lineHeight: 1 }}>{s.glyph}</span>
-        <span style={{ textTransform: "uppercase", fontSize: 12 }}>{titleText}</span>
+        <span aria-hidden style={{ fontSize: 20, lineHeight: 1 }}>{s.glyph}</span>
+        <span style={{ textTransform: "uppercase", fontSize: 13 }}>{titleText}</span>
       </div>
-      <div style={{ fontFamily: theme.font.serif, fontSize: 15.5 }}>
+      <div style={{ fontFamily: theme.font.serif, fontSize: 17, lineHeight: 1.65 }}>
         {children}
       </div>
     </aside>

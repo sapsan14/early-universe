@@ -3,6 +3,7 @@ import { theme } from "../../theme";
 import { useT } from "../../i18n";
 import type { Phrase } from "../../i18n";
 import { Term } from "./Term";
+import { Tex } from "./Math";
 
 /**
  * A schoolbook slider — labelled with name, symbol and unit, current value
@@ -56,21 +57,26 @@ export function ParamSlider({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "10px 12px", borderRadius: theme.radius.md, background: "rgba(155, 140, 255, 0.05)", border: `1px solid ${theme.color.line}` }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
           {termId
-            ? <Term id={termId}><span style={{ color: theme.color.ink, fontWeight: 600 }}>{t(label)}</span></Term>
-            : <span style={{ color: theme.color.ink, fontWeight: 600 }}>{t(label)}</span>}
-          {symbol && <span style={{ fontFamily: theme.font.math, color: theme.color.inkSoft }}>{symbol}</span>}
-          {unit && <span style={{ color: theme.color.inkDim, fontSize: 11 }}>{unit}</span>}
+            ? <Term id={termId}><span style={{ color: theme.color.ink, fontWeight: 600, fontSize: 14 }}>{t(label)}</span></Term>
+            : <span style={{ color: theme.color.ink, fontWeight: 600, fontSize: 14 }}>{t(label)}</span>}
+          {symbol && (
+            <span style={{ color: theme.color.inkSoft, fontSize: 15 }}>
+              <Tex>{symbol}</Tex>
+            </span>
+          )}
+          {unit && <span style={{ color: theme.color.inkDim, fontSize: 12 }}>{unit}</span>}
         </div>
         <span style={{
           fontFamily: theme.font.mono,
-          fontSize: 14,
+          fontSize: 15,
+          fontWeight: 600,
           color: accentColor,
-          padding: "3px 10px",
+          padding: "4px 12px",
           borderRadius: 999,
           background: accentColor + "22",
-          minWidth: 70,
+          minWidth: 78,
           textAlign: "center",
         }}>{display}</span>
       </div>
@@ -130,7 +136,7 @@ export function ParamSlider({
         </div>
       )}
       {caption && (
-        <div style={{ color: theme.color.inkSoft, fontSize: 12.5, lineHeight: 1.45, fontStyle: "italic" }}>
+        <div style={{ color: theme.color.inkSoft, fontSize: 13.5, lineHeight: 1.5, fontStyle: "italic" }}>
           {t(caption)}
         </div>
       )}

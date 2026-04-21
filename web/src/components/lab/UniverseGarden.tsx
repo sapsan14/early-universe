@@ -66,39 +66,49 @@ export function UniverseGarden() {
     const snap = data.snapshots[frame];
     const N = snap.length;
     canvas.width = N; canvas.height = N;
+
     const flat = snap.flat();
-    let min = Infinity, max = -Infinity, sum = 0, sumSq = 0;
-    for (const v of flat) {
-      if (v < min) min = v; if (v > max) max = v;
-      sum += v; sumSq += v * v;
-    }
+
+    // Robust statistics: sort once, use 1st / 99th percentiles as colour-map
+    // bounds so a single extreme pixel can't wash the whole frame to one colour.
+    const sorted = flat.slice().sort((a, b) => a - b);
+    const lo = sorted[Math.floor(sorted.length * 0.01)];
+    const hi = sorted[Math.floor(sorted.length * 0.99)];
+    const range = Math.max(hi - lo, 1e-6);
+
+    // True std for the "structure strength" meter
+    let sum = 0; for (const v of flat) sum += v;
     const mean = sum / flat.length;
-    const variance = Math.max(sumSq / flat.length - mean * mean, 0);
-    const std = Math.sqrt(variance);
-    setStrength(std);
-    const range = max - min || 1;
+    let sumSq = 0; for (const v of flat) sumSq += (v - mean) ** 2;
+    setStrength(Math.sqrt(sumSq / flat.length));
+
     const img = ctx.createImageData(N, N);
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
-        const v = (snap[y][x] - min) / range;
+        // Normalise, clip into [0, 1]
+        let v = (snap[y][x] - lo) / range;
+        v = Math.max(0, Math.min(1, v));
+        // Gamma stretch darkens voids, brightens peaks → richer contrast
+        v = Math.pow(v, 0.72);
         const i = (y * N + x) * 4;
-        // Higher-contrast cosmic ramp
-        if (v < 0.35) {
-          const u = v / 0.35;
-          img.data[i] = 6 + 70 * u;
-          img.data[i + 1] = 10 + 18 * u;
-          img.data[i + 2] = 45 + 155 * u;
-        } else if (v < 0.70) {
-          const u = (v - 0.35) / 0.35;
-          img.data[i] = 76 + 180 * u;
-          img.data[i + 1] = 28 + 52 * u;
-          img.data[i + 2] = 200 - 110 * u;
+        // Five-stop vivid colormap: black → indigo → magenta → amber → cream
+        let r, g, b;
+        if (v < 0.22) {
+          const u = v / 0.22;
+          r = 4 + 30 * u; g = 2 + 8 * u; b = 18 + 72 * u;
+        } else if (v < 0.50) {
+          const u = (v - 0.22) / 0.28;
+          r = 34 + 180 * u; g = 10 + 30 * u; b = 90 + 100 * u;
+        } else if (v < 0.78) {
+          const u = (v - 0.50) / 0.28;
+          r = 214 + 40 * u; g = 40 + 130 * u; b = 190 - 110 * u;
         } else {
-          const u = (v - 0.70) / 0.30;
-          img.data[i] = 255;
-          img.data[i + 1] = 80 + 160 * u;
-          img.data[i + 2] = 90 + 100 * u;
+          const u = (v - 0.78) / 0.22;
+          r = 254; g = 170 + 70 * u; b = 80 + 150 * u;
         }
+        img.data[i] = r;
+        img.data[i + 1] = g;
+        img.data[i + 2] = b;
         img.data[i + 3] = 255;
       }
     }
@@ -123,31 +133,31 @@ export function UniverseGarden() {
         </Card>
 
         <ParamSlider
-          label={p("Хаббл H₀", "Hubble H₀")}
-          symbol="H₀" unit="km/s/Mpc"
+          label={p("Хаббл", "Hubble")}
+          symbol="H_0" unit="km/s/Mpc"
           value={params.H0} min={50} max={100} step={1}
           onChange={(v) => setParams((p) => ({ ...p, H0: v }))}
           accent="starlight"
           termId="hubble"
         />
         <ParamSlider
-          label={p("Тёмная материя Ω_cdm h²", "Dark matter Ω_cdm h²")}
-          symbol="Ω_cdm h²"
+          label={p("Тёмная материя", "Dark matter")}
+          symbol="\\Omega_{\\rm cdm} h^2"
           value={params.Omega_cdm_h2} min={0.005} max={0.40} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_cdm_h2: v }))}
           accent="nova"
           termId="dark-matter"
         />
         <ParamSlider
-          label={p("Громкость A_s", "Loudness A_s")}
-          symbol="ln(10¹⁰ A_s)"
+          label={p("Громкость инфляции", "Inflation loudness")}
+          symbol="\\ln(10^{10}\\, A_s)"
           value={params.ln10As} min={1.5} max={4.5} step={0.05}
           onChange={(v) => setParams((p) => ({ ...p, ln10As: v }))}
           accent="ember"
           termId="a-s"
         />
         <ParamSlider
-          label={p("Наклон n_s", "Tilt n_s")}
+          label={p("Наклон спектра", "Spectral tilt")}
           symbol="n_s"
           value={params.n_s} min={0.7} max={1.3} step={0.01}
           onChange={(v) => setParams((p) => ({ ...p, n_s: v }))}
@@ -186,10 +196,12 @@ export function UniverseGarden() {
             <canvas
               ref={canvasRef}
               style={{
-                width: "100%", maxWidth: 480, aspectRatio: "1/1",
-                imageRendering: "pixelated",
-                borderRadius: 8,
-                boxShadow: "0 0 40px rgba(255, 122, 198, 0.35)",
+                width: "100%", maxWidth: 560, aspectRatio: "1/1",
+                // auto gives us browser-smooth interpolation — the 96×96
+                // grid rendered at 560 px looks silky instead of blocky
+                imageRendering: "auto",
+                borderRadius: 12,
+                boxShadow: "0 0 60px rgba(255, 122, 198, 0.35), inset 0 0 60px rgba(0,0,0,0.3)",
                 opacity: data ? 1 : 0.15,
                 transition: theme.motion.base,
               }}

@@ -326,69 +326,114 @@ export function localSpectrum(params: CosmoParams, lMax = 2500): SpectrumRespons
   return { ell, cl, inference_time_ms: 0.6 };
 }
 
-/** Toy density field that grows over "time" and responds to A_s, n_s, Omega. */
-export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10, seed0 = 1234): PlayableResponse {
-  const snapshots: number[][][] = [];
-  const redshifts: number[] = [];
-  const scaleFactors: number[] = [];
-
-  // Seeded noise
+/**
+ * Toy density field that grows over "time" and reacts *visibly* to every
+ * slider. This is not physics-accurate — it's a didactic illustration of
+ * how cosmological parameters change the cosmic web.
+ *
+ * Pipeline:
+ *   1. Build a multi-octave noise field (like a 2-D Perlin) — octave weights
+ *      depend on n_s (tilt toward large or small scales).
+ *   2. Apply linear growth D(t) × amp × ω_cdm-driven multiplier.
+ *   3. Apply non-linear spherical-collapse squishing δ → δ (1 + αδ) so
+ *      over-dense regions sharpen into filaments / nodes.
+ *   4. Per-snapshot percentile-based normalisation so the colormap never
+ *      collapses to a single shade.
+ */
+export function localPlayable(params: CosmoParams, gridSize = 96, nSteps = 12, seed0 = 1234): PlayableResponse {
   let seed = seed0 >>> 0;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 0xffffffff;
   };
+  const gauss = () => {
+    const u1 = Math.max(rand(), 1e-9);
+    const u2 = rand();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+
   const N = gridSize;
-  // Generate 2D Gaussian random field, biased by parameters
-  const field: number[][] = [];
-  for (let y = 0; y < N; y++) {
-    const row: number[] = [];
-    for (let x = 0; x < N; x++) {
-      // Gaussian via Box-Muller
-      const u1 = Math.max(rand(), 1e-9);
-      const u2 = rand();
-      row.push(Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2));
+
+  // Build four octaves at decreasing resolution and upsample.
+  // Each octave is an independently-seeded Gaussian field. By weighting them
+  // differently we simulate "more large-scale power" vs "more small-scale".
+  const octaveSizes = [8, 16, 32, 64];
+  const octaves = octaveSizes.map((size) => {
+    const f: number[][] = [];
+    for (let y = 0; y < size; y++) {
+      const row: number[] = [];
+      for (let x = 0; x < size; x++) row.push(gauss());
+      f.push(row);
     }
-    field.push(row);
-  }
-  // Smooth with simple boxcar; scale of structure depends on n_s
-  const smoothPasses = Math.max(1, Math.round(4 - (params.n_s - 0.96) * 8));
-  let smoothed = field.map((r) => r.slice());
-  for (let p = 0; p < smoothPasses; p++) {
-    const next = smoothed.map((r) => r.slice());
-    for (let y = 1; y < N - 1; y++) {
-      for (let x = 1; x < N - 1; x++) {
-        let s = 0;
-        for (let dy = -1; dy <= 1; dy++)
-          for (let dx = -1; dx <= 1; dx++)
-            s += smoothed[y + dy][x + dx];
-        next[y][x] = s / 9;
+    return f;
+  });
+
+  // Weights: n_s controls tilt between large and small scales.
+  // n_s = 1.0 → all octaves equal. n_s > 1 → small scales amplified.
+  // n_s < 1 → large scales amplified.
+  const tilt = params.n_s - 1.0;
+  const weights = octaveSizes.map((size) => {
+    const logSize = Math.log2(size);
+    return Math.pow(2, tilt * (logSize - 3.5));
+  });
+  // Normalize weights
+  const wSum = weights.reduce((a, b) => a + b, 0);
+  const w = weights.map((x) => x / wSum);
+
+  // Upsample each octave to N×N via bilinear interpolation and sum.
+  const base: number[][] = Array.from({ length: N }, () => new Array(N).fill(0));
+  for (let o = 0; o < octaves.length; o++) {
+    const f = octaves[o];
+    const s = octaveSizes[o];
+    for (let y = 0; y < N; y++) {
+      const fy = (y / N) * s;
+      const y0 = Math.floor(fy) % s;
+      const y1 = (y0 + 1) % s;
+      const ty = fy - Math.floor(fy);
+      for (let x = 0; x < N; x++) {
+        const fx = (x / N) * s;
+        const x0 = Math.floor(fx) % s;
+        const x1 = (x0 + 1) % s;
+        const tx = fx - Math.floor(fx);
+        const a = f[y0][x0] * (1 - tx) + f[y0][x1] * tx;
+        const b = f[y1][x0] * (1 - tx) + f[y1][x1] * tx;
+        base[y][x] += (a * (1 - ty) + b * ty) * w[o];
       }
     }
-    smoothed = next;
   }
 
-  const amp = Math.exp(params.ln10As - 3.044) ** 2;
-  const omega = params.Omega_cdm_h2 / 0.12;
-  // Faster expansion (larger H0) reduces how much time structures have to grow.
-  const expansionDrag = Math.pow(67.36 / Math.max(params.H0, 30), 0.5);
-  let std = 0;
+  // Normalize base field to zero mean, unit std
   let mean = 0;
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) mean += smoothed[y][x];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) mean += base[y][x];
   mean /= N * N;
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) std += (smoothed[y][x] - mean) ** 2;
-  std = Math.sqrt(std / (N * N)) || 1;
+  let sq = 0;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) sq += (base[y][x] - mean) ** 2;
+  const std = Math.sqrt(sq / (N * N)) || 1;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) base[y][x] = (base[y][x] - mean) / std;
+
+  // Physical growth factor
+  const asFactor = Math.exp(params.ln10As - 3.044);
+  const omFactor = Math.pow(params.Omega_cdm_h2 / 0.12, 0.7);
+  const expansionDrag = Math.pow(67.36 / Math.max(params.H0, 30), 0.4);
+
+  const snapshots: number[][][] = [];
+  const redshifts: number[] = [];
+  const scaleFactors: number[] = [];
 
   for (let step = 0; step < nSteps; step++) {
     const t = (step + 1) / nSteps;
-    const growth = amp * omega * expansionDrag * t ** 1.5; // delta ∝ a in matter era
+    // δ = amp × base field — amplitude grows through the simulation
+    const linAmp = asFactor * omFactor * expansionDrag * t ** 1.3;
+    // Non-linear factor — amplifies crests into filaments, flattens voids
+    const nlCoeff = 0.5 * Math.pow(params.Omega_cdm_h2 / 0.12, 0.3);
     const snap: number[][] = [];
     for (let y = 0; y < N; y++) {
       const row: number[] = [];
       for (let x = 0; x < N; x++) {
-        const v = (smoothed[y][x] - mean) / std;
-        // Apply non-linear amplification to mimic structure formation
-        const delta = v * growth * (1 + 0.4 * v * growth);
+        const lin = base[y][x] * linAmp;
+        // Spherical-collapse-like non-linearity: δ → δ + nl × max(0, δ)^2
+        const pos = Math.max(lin, 0);
+        const delta = lin + nlCoeff * pos * pos;
         row.push(delta);
       }
       snap.push(row);
@@ -399,20 +444,19 @@ export function localPlayable(params: CosmoParams, gridSize = 64, nSteps = 10, s
     scaleFactors.push(1 / (1 + z));
   }
 
-  // Structure check: compute final-snapshot std vs threshold
+  // Structure check: final snapshot has visible contrast above noise floor?
   const last = snapshots[snapshots.length - 1].flat();
-  let lm = 0; for (const v of last) lm += v;
-  lm /= last.length;
-  let lv = 0; for (const v of last) lv += (v - lm) ** 2;
-  lv = Math.sqrt(lv / last.length);
-  const structure_formed = lv > 0.6 * Math.max(amp, 0.1);
+  let lMean = 0; for (const v of last) lMean += v; lMean /= last.length;
+  let lVar = 0; for (const v of last) lVar += (v - lMean) ** 2;
+  const lStd = Math.sqrt(lVar / last.length);
+  const structure_formed = lStd > 0.25 && asFactor * omFactor > 0.3;
 
-  // Power spectrum (radial average)
+  // Power spectrum (radial average, synthetic)
   const kArr: number[] = [];
   const pkArr: number[] = [];
   for (let k = 1; k <= N / 4; k++) {
     kArr.push(k);
-    pkArr.push((amp * omega * Math.pow(k, params.n_s - 1)) / (1 + (k / 8) ** 2));
+    pkArr.push((asFactor * omFactor * Math.pow(k, params.n_s - 1)) / (1 + (k / 8) ** 2));
   }
 
   return {
