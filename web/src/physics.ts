@@ -414,10 +414,16 @@ export function localPlayable(params: CosmoParams, gridSize = 96, nSteps = 12, s
   const std = Math.sqrt(sq / (N * N)) || 1;
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) base[y][x] = (base[y][x] - mean) / std;
 
-  // Physical growth factor
+  // Physical growth factor.
+  //   `asFactor`: linear in e^(ln10As − 3.044), so the slider's full 1.5 → 4.5
+  //               range spans ~20×.
+  //   `omFactor`: sub-linear in Ω_cdm h² — too-high CDM otherwise blows out.
+  //   `expansionDrag`: lower H₀ means an older Universe and more time for
+  //               structure to grow. Exponent 1.2 gives a ~3× swing across
+  //               the 50–100 km/s/Mpc slider — visible, but not cartoonish.
   const asFactor = Math.exp(params.ln10As - 3.044);
   const omFactor = Math.pow(params.Omega_cdm_h2 / 0.12, 0.7);
-  const expansionDrag = Math.pow(67.36 / Math.max(params.H0, 30), 0.4);
+  const expansionDrag = Math.pow(67.36 / Math.max(params.H0, 30), 1.2);
 
   const snapshots: number[][][] = [];
   const redshifts: number[] = [];

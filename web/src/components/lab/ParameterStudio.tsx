@@ -174,7 +174,7 @@ export function ParameterStudio() {
 
         <ParamSlider
           label={p("Хаббл", "Hubble")}
-          symbol="H_0" unit="km/s/Mpc"
+          symbol={"H_0"} unit="km/s/Mpc"
           termId="hubble"
           value={params.H0} min={50} max={100} step={0.1}
           onChange={(v) => setParams((p) => ({ ...p, H0: v }))}
@@ -184,7 +184,7 @@ export function ParameterStudio() {
         />
         <ParamSlider
           label={p("Барионы", "Baryons")}
-          symbol="\\Omega_b h^2"
+          symbol={"\\Omega_b\\, h^2"}
           termId="omega-b-h2"
           value={params.Omega_b_h2} min={0.015} max={0.030} step={0.0005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_b_h2: v }))}
@@ -193,7 +193,7 @@ export function ParameterStudio() {
         />
         <ParamSlider
           label={p("Тёмная материя", "Dark matter")}
-          symbol="\\Omega_{\\rm cdm} h^2"
+          symbol={"\\Omega_{\\mathrm{cdm}}\\, h^2"}
           termId="omega-cdm-h2"
           value={params.Omega_cdm_h2} min={0.05} max={0.20} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_cdm_h2: v }))}
@@ -202,7 +202,7 @@ export function ParameterStudio() {
         />
         <ParamSlider
           label={p("Наклон", "Tilt")}
-          symbol="n_s"
+          symbol={"n_s"}
           termId="n-s"
           value={params.n_s} min={0.85} max={1.10} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, n_s: v }))}
@@ -212,7 +212,7 @@ export function ParameterStudio() {
         />
         <ParamSlider
           label={p("Амплитуда", "Amplitude")}
-          symbol="\\ln(10^{10}\\, A_s)"
+          symbol={"\\ln(10^{10}\\, A_s)"}
           termId="a-s"
           value={params.ln10As} min={2.4} max={3.8} step={0.02}
           onChange={(v) => setParams((p) => ({ ...p, ln10As: v }))}
@@ -221,7 +221,7 @@ export function ParameterStudio() {
         />
         <ParamSlider
           label={p("Реионизация", "Reionization")}
-          symbol="\\tau_{\\rm reio}"
+          symbol={"\\tau_{\\mathrm{reio}}"}
           termId="tau"
           value={params.tau_reio} min={0.01} max={0.15} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, tau_reio: v }))}

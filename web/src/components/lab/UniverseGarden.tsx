@@ -13,12 +13,15 @@ export function UniverseGarden() {
   const { pick, t } = useT();
   const [params, setParams] = useState<CosmoParams>({ ...DEFAULT_PARAMS });
   const [data, setData] = useState<PlayableResponse | null>(null);
-  const [frame, setFrame] = useState(0);
+  // `timeT` is continuous: 0 → nSteps-1. The renderer floors + linearly
+  // blends neighbouring snapshots so playback is silky instead of stepped.
+  const [timeT, setTimeT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [usingApi, setUsingApi] = useState(false);
   const [seed, setSeed] = useState(42);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number | null>(null);
 
   const simulate = useCallback(async () => {
     setLoading(true);
@@ -33,7 +36,7 @@ export function UniverseGarden() {
       setUsingApi(false);
     }
     setData(result);
-    setFrame(result.snapshots.length - 1); // show the final "grown" state
+    setTimeT(result.snapshots.length - 1); // show the fully-grown state
     setPlaying(false);
     setLoading(false);
   }, [params, seed]);
@@ -44,28 +47,52 @@ export function UniverseGarden() {
     return () => clearTimeout(timer);
   }, [simulate]);
 
-  // animation
+  // Smooth RAF-driven playback. ~3.5 seconds to cross the whole time range,
+  // independent of `nSteps`, with sub-frame interpolation for a cinematic feel.
   useEffect(() => {
     if (!playing || !data) return;
-    const id = setInterval(() => {
-      setFrame((f) => {
-        if (f >= data.snapshots.length - 1) { setPlaying(false); return f; }
-        return f + 1;
-      });
-    }, 280);
-    return () => clearInterval(id);
+    const duration = 3500;
+    const maxT = data.snapshots.length - 1;
+    let startWall = performance.now();
+    let startT = timeT >= maxT - 0.01 ? 0 : timeT;
+    if (startT !== timeT) setTimeT(startT);
+    const tick = (now: number) => {
+      const frac = Math.min(1, (now - startWall) / duration);
+      const t = startT + (maxT - startT) * frac;
+      setTimeT(t);
+      if (frac >= 1) { setPlaying(false); return; }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, data]);
 
-  // render snapshot
+  // render interpolated snapshot
   const [strength, setStrength] = useState(0);
   useEffect(() => {
     if (!data || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const snap = data.snapshots[frame];
-    const N = snap.length;
+    const maxIdx = data.snapshots.length - 1;
+    const clamped = Math.max(0, Math.min(maxIdx, timeT));
+    const i0 = Math.floor(clamped);
+    const i1 = Math.min(maxIdx, i0 + 1);
+    const frac = clamped - i0;
+    const s0 = data.snapshots[i0];
+    const s1 = data.snapshots[i1];
+    const N = s0.length;
     canvas.width = N; canvas.height = N;
+    // Blend neighbouring snapshots into a single array
+    const snap: number[][] = new Array(N);
+    for (let y = 0; y < N; y++) {
+      const row = new Array<number>(N);
+      for (let x = 0; x < N; x++) {
+        row[x] = s0[y][x] * (1 - frac) + s1[y][x] * frac;
+      }
+      snap[y] = row;
+    }
 
     const flat = snap.flat();
 
@@ -116,7 +143,7 @@ export function UniverseGarden() {
       }
     }
     ctx.putImageData(img, 0, 0);
-  }, [data, frame]);
+  }, [data, timeT]);
 
   const verdict = data?.structure_formed
     ? { tone: "aurora" as const, label: pick({ ru: "Структура сформировалась! Космическая паутина видна.", en: "Structure formed! Cosmic web visible." }) }
@@ -137,7 +164,7 @@ export function UniverseGarden() {
 
         <ParamSlider
           label={p("Хаббл", "Hubble")}
-          symbol="H_0" unit="km/s/Mpc"
+          symbol={"H_0"} unit="km/s/Mpc"
           value={params.H0} min={50} max={100} step={1}
           onChange={(v) => setParams((p) => ({ ...p, H0: v }))}
           accent="starlight"
@@ -145,7 +172,7 @@ export function UniverseGarden() {
         />
         <ParamSlider
           label={p("Тёмная материя", "Dark matter")}
-          symbol="\\Omega_{\\rm cdm} h^2"
+          symbol={"\\Omega_{\\mathrm{cdm}} h^2"}
           value={params.Omega_cdm_h2} min={0.005} max={0.40} step={0.005}
           onChange={(v) => setParams((p) => ({ ...p, Omega_cdm_h2: v }))}
           accent="nova"
@@ -153,7 +180,7 @@ export function UniverseGarden() {
         />
         <ParamSlider
           label={p("Громкость инфляции", "Inflation loudness")}
-          symbol="\\ln(10^{10}\\, A_s)"
+          symbol={"\\ln(10^{10}\\, A_s)"}
           value={params.ln10As} min={1.5} max={4.5} step={0.05}
           onChange={(v) => setParams((p) => ({ ...p, ln10As: v }))}
           accent="ember"
@@ -161,7 +188,7 @@ export function UniverseGarden() {
         />
         <ParamSlider
           label={p("Наклон спектра", "Spectral tilt")}
-          symbol="n_s"
+          symbol={"n_s"}
           value={params.n_s} min={0.7} max={1.3} step={0.01}
           onChange={(v) => setParams((p) => ({ ...p, n_s: v }))}
           accent="plasma"
@@ -266,20 +293,26 @@ export function UniverseGarden() {
           {data && (
             <>
               <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                <Button variant="soft" size="sm" onClick={() => { setFrame(0); setPlaying(true); }}>▶ {pick({ ru: "Воспроизвести", en: "Play" })}</Button>
+                <Button variant="soft" size="sm" onClick={() => { setTimeT(0); setPlaying(true); }}>▶ {pick({ ru: "Воспроизвести", en: "Play" })}</Button>
                 <Button variant="soft" size="sm" onClick={() => setPlaying(false)}>⏸ {pick({ ru: "Пауза", en: "Pause" })}</Button>
-                <Button variant="ghost" size="sm" onClick={() => setFrame(0)}>↺ {pick({ ru: "В начало", en: "Restart" })}</Button>
+                <Button variant="ghost" size="sm" onClick={() => { setPlaying(false); setTimeT(0); }}>↺ {pick({ ru: "В начало", en: "Restart" })}</Button>
               </div>
               <input
-                type="range" min={0} max={data.snapshots.length - 1} value={frame}
-                onChange={(e) => { setPlaying(false); setFrame(parseInt(e.target.value)); }}
+                type="range" min={0} max={data.snapshots.length - 1} step={0.01}
+                value={timeT}
+                onChange={(e) => { setPlaying(false); setTimeT(parseFloat(e.target.value)); }}
                 style={{ width: "100%", marginTop: 10, accentColor: theme.color.nova }}
               />
-              <div style={{ display: "flex", justifyContent: "space-between", color: theme.color.inkSoft, fontSize: 12, fontFamily: theme.font.mono }}>
-                <span>{pick({ ru: "Кадр", en: "Frame" })} {frame + 1}/{data.snapshots.length}</span>
-                <span>z = {data.redshifts[frame]?.toFixed(2)}</span>
-                <span>a = {data.scale_factors[frame]?.toFixed(3)}</span>
-              </div>
+              {(() => {
+                const f = Math.min(data.snapshots.length - 1, Math.round(timeT));
+                return (
+                  <div style={{ display: "flex", justifyContent: "space-between", color: theme.color.inkSoft, fontSize: 12, fontFamily: theme.font.mono }}>
+                    <span>{pick({ ru: "Кадр", en: "Frame" })} {f + 1}/{data.snapshots.length}</span>
+                    <span>z = {data.redshifts[f]?.toFixed(2)}</span>
+                    <span>a = {data.scale_factors[f]?.toFixed(3)}</span>
+                  </div>
+                );
+              })()}
               <Callout variant={verdict.tone === "aurora" ? "tip" : "warning"} title={pick({ ru: "Вердикт", en: "Verdict" })}>
                 {verdict.label}
               </Callout>

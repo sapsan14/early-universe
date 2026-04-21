@@ -217,12 +217,13 @@ export function AnomalyHunter() {
             </div>
           </div>
 
-          {/* Map + SVG overlay */}
+          {/* Map + SVG overlay. The canvas and SVG share a single fixed-aspect
+              wrapper (`wrapRef`) so absolute-positioned overlays line up with
+              the pixels exactly — an earlier version used flex-centred canvas
+              and `inset: 12` SVG, which drifted apart when the container was
+              wider than the canvas. */}
           <div
-            ref={wrapRef}
-            onClick={handleCanvasClick}
             style={{
-              position: "relative",
               background: "#05060f",
               borderRadius: theme.radius.md,
               border: `1px solid ${theme.color.line}`,
@@ -231,88 +232,97 @@ export function AnomalyHunter() {
               cursor: "crosshair",
             }}
           >
-            <canvas
-              ref={canvasRef}
+            <div
+              ref={wrapRef}
+              onClick={handleCanvasClick}
               style={{
+                position: "relative",
                 width: "100%", maxWidth: 560, aspectRatio: "1/1",
-                imageRendering: "auto",
                 borderRadius: 10,
+                overflow: "hidden",
                 boxShadow: "0 0 60px rgba(122, 252, 177, 0.22), inset 0 0 40px rgba(0,0,0,0.35)",
-                display: "block",
               }}
-            />
-            {/* SVG overlay for pulsing halos — sized to canvas, uses map-coords via viewBox */}
-            {result && map && (
-              <svg
-                viewBox={`0 0 ${map.length} ${map.length}`}
+            >
+              <canvas
+                ref={canvasRef}
                 style={{
-                  position: "absolute", inset: 12,
-                  width: "calc(100% - 24px)", maxWidth: 560,
-                  height: "auto", aspectRatio: "1/1",
-                  pointerEvents: "none",
+                  position: "absolute", inset: 0,
+                  width: "100%", height: "100%",
+                  imageRendering: "auto",
+                  display: "block",
                 }}
-              >
-                {result.candidates.map((c, i) => (
-                  <g key={i}>
-                    <circle
-                      cx={c.x + 0.5} cy={c.y + 0.5}
-                      r={(c.radius ?? 3) + 2}
-                      fill="none"
-                      stroke="#ffd56b"
-                      strokeWidth="0.8"
-                      opacity="0.9"
-                    />
-                    <circle
-                      cx={c.x + 0.5} cy={c.y + 0.5}
-                      r={(c.radius ?? 3) + 5}
-                      fill="none"
-                      stroke="#ffd56b"
-                      strokeWidth="0.5"
-                      opacity="0.45"
-                      style={{
-                        transformOrigin: `${c.x + 0.5}px ${c.y + 0.5}px`,
-                        animation: `anom-pulse 1.6s ${i * 0.07}s ease-out infinite`,
-                      }}
-                    />
-                  </g>
-                ))}
-                {probe && (
-                  <g>
-                    <line
-                      x1={probe.x + 0.5} y1={0} x2={probe.x + 0.5} y2={map.length}
-                      stroke="rgba(255, 255, 255, 0.35)" strokeWidth="0.3" strokeDasharray="1,1"
-                    />
-                    <line
-                      x1={0} y1={probe.y + 0.5} x2={map.length} y2={probe.y + 0.5}
-                      stroke="rgba(255, 255, 255, 0.35)" strokeWidth="0.3" strokeDasharray="1,1"
-                    />
-                    <circle
-                      cx={probe.x + 0.5} cy={probe.y + 0.5} r="3"
-                      fill="none" stroke="#fff" strokeWidth="0.6"
-                    />
-                  </g>
-                )}
-              </svg>
-            )}
-            {/* Click read-out */}
-            {probe && (
-              <div style={{
-                position: "absolute", left: 18, bottom: 18,
-                padding: "8px 12px", borderRadius: 10,
-                background: "rgba(5, 6, 15, 0.88)",
-                border: `1px solid ${theme.color.lineStrong}`,
-                color: theme.color.ink,
-                fontFamily: theme.font.mono, fontSize: 12.5,
-                pointerEvents: "none",
-              }}>
-                <div style={{ color: theme.color.inkSoft, fontSize: 11 }}>
-                  {pick({ ru: "Клик:", en: "Click:" })} ({probe.x}, {probe.y})
+              />
+              {result && map && (
+                <svg
+                  viewBox={`0 0 ${map.length} ${map.length}`}
+                  preserveAspectRatio="none"
+                  style={{
+                    position: "absolute", inset: 0,
+                    width: "100%", height: "100%",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {result.candidates.map((c, i) => (
+                    <g key={i}>
+                      <circle
+                        cx={c.x + 0.5} cy={c.y + 0.5}
+                        r={(c.radius ?? 3) + 2}
+                        fill="none"
+                        stroke="#ffd56b"
+                        strokeWidth="0.8"
+                        opacity="0.9"
+                      />
+                      <circle
+                        cx={c.x + 0.5} cy={c.y + 0.5}
+                        r={(c.radius ?? 3) + 5}
+                        fill="none"
+                        stroke="#ffd56b"
+                        strokeWidth="0.5"
+                        opacity="0.45"
+                        style={{
+                          transformOrigin: `${c.x + 0.5}px ${c.y + 0.5}px`,
+                          animation: `anom-pulse 1.6s ${i * 0.07}s ease-out infinite`,
+                        }}
+                      />
+                    </g>
+                  ))}
+                  {probe && (
+                    <g>
+                      <line
+                        x1={probe.x + 0.5} y1={0} x2={probe.x + 0.5} y2={map.length}
+                        stroke="rgba(255, 255, 255, 0.35)" strokeWidth="0.3" strokeDasharray="1,1"
+                      />
+                      <line
+                        x1={0} y1={probe.y + 0.5} x2={map.length} y2={probe.y + 0.5}
+                        stroke="rgba(255, 255, 255, 0.35)" strokeWidth="0.3" strokeDasharray="1,1"
+                      />
+                      <circle
+                        cx={probe.x + 0.5} cy={probe.y + 0.5} r="3"
+                        fill="none" stroke="#fff" strokeWidth="0.6"
+                      />
+                    </g>
+                  )}
+                </svg>
+              )}
+              {probe && (
+                <div style={{
+                  position: "absolute", left: 10, bottom: 10,
+                  padding: "8px 12px", borderRadius: 10,
+                  background: "rgba(5, 6, 15, 0.88)",
+                  border: `1px solid ${theme.color.lineStrong}`,
+                  color: theme.color.ink,
+                  fontFamily: theme.font.mono, fontSize: 12.5,
+                  pointerEvents: "none",
+                }}>
+                  <div style={{ color: theme.color.inkSoft, fontSize: 11 }}>
+                    {pick({ ru: "Клик:", en: "Click:" })} ({probe.x}, {probe.y})
+                  </div>
+                  <div style={{ color: Math.abs(probe.sigma) >= threshold ? theme.color.starlight : theme.color.ink }}>
+                    {probe.sigma >= 0 ? "+" : ""}{probe.sigma.toFixed(2)}σ
+                  </div>
                 </div>
-                <div style={{ color: Math.abs(probe.sigma) >= threshold ? theme.color.starlight : theme.color.ink }}>
-                  {probe.sigma >= 0 ? "+" : ""}{probe.sigma.toFixed(2)}σ
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Presets — click to shift the picture dramatically */}
@@ -368,7 +378,7 @@ export function AnomalyHunter() {
           <Badge tone="aurora" glyph="🔭">{pick({ ru: "Управление", en: "Controls" })}</Badge>
           <ParamSlider
             label={p("Порог обнаружения", "Detection threshold")}
-            symbol="\\sigma"
+            symbol={"\\sigma"}
             value={threshold} min={1} max={5} step={0.25}
             onChange={setThreshold}
             accent="ember"
@@ -376,7 +386,7 @@ export function AnomalyHunter() {
           />
           <ParamSlider
             label={p("Уровень загрязнения", "Contamination level")}
-            symbol="N_{\\text{anom}}"
+            symbol={"N_{\\mathrm{anom}}"}
             value={contamination} min={0} max={5} step={1}
             onChange={(v) => setContamination(v)}
             accent="nova"
