@@ -1,61 +1,37 @@
-import React, { useState } from "react";
-import { TimeTraveler } from "./components/TimeTraveler.tsx";
-import { ParameterExplorer } from "./components/ParameterExplorer.tsx";
-import { PlayableUniverse } from "./components/PlayableUniverse.tsx";
-import { AnomalyMap } from "./components/AnomalyMap.tsx";
+import React from "react";
+import { I18nProvider } from "./i18n";
+import { useRouter } from "./router";
+import { Navbar } from "./components/shell/Navbar";
+import { Footer } from "./components/shell/Footer";
+import { Starfield } from "./components/ui/Starfield";
+import { Home } from "./components/pages/Home";
+import { Lessons } from "./components/pages/Lessons";
+import { Lab } from "./components/pages/Lab";
+import { Glossary } from "./components/pages/Glossary";
+import { About } from "./components/pages/About";
 
-type Tab = "timeline" | "explorer" | "playable" | "anomalies";
+function Body() {
+  const { route } = useRouter();
+  switch (route.name) {
+    case "home": return <Home />;
+    case "lessons": return <Lessons chapterId={route.chapter} />;
+    case "lab": return <Lab tool={route.tool} />;
+    case "glossary": return <Glossary />;
+    case "about": return <About />;
+  }
+}
 
 export function App() {
-  const [tab, setTab] = useState<Tab>("timeline");
-
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header style={{
-        padding: "16px 32px",
-        background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)",
-        borderBottom: "1px solid #30363d",
-        display: "flex",
-        alignItems: "center",
-        gap: 24,
-      }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: 2 }}>
-          ARCHEON <span style={{ color: "#58a6ff", fontWeight: 400 }}>Observatory</span>
-        </h1>
-        <nav style={{ display: "flex", gap: 4, marginLeft: 32 }}>
-          {([
-            ["timeline", "Cosmic Time Machine"],
-            ["explorer", "Parameter Explorer"],
-            ["playable", "Playable Universe"],
-            ["anomalies", "Anomaly Map"],
-          ] as const).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 6,
-                border: "none",
-                background: tab === id ? "#1f6feb" : "transparent",
-                color: tab === id ? "#fff" : "#8b949e",
-                cursor: "pointer",
-                fontSize: 14,
-                fontWeight: tab === id ? 600 : 400,
-                transition: "all 0.15s",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      </header>
-
-      <main style={{ flex: 1, padding: 32 }}>
-        {tab === "timeline" && <TimeTraveler />}
-        {tab === "explorer" && <ParameterExplorer />}
-        {tab === "playable" && <PlayableUniverse />}
-        {tab === "anomalies" && <AnomalyMap />}
-      </main>
-    </div>
+    <I18nProvider>
+      <Starfield density={1} intensity={1} />
+      <div style={{ position: "relative", zIndex: 10, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <Navbar />
+        <main style={{ flex: 1 }}>
+          <Body />
+        </main>
+        <Footer />
+      </div>
+    </I18nProvider>
   );
 }
