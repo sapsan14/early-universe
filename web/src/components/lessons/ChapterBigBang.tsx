@@ -38,18 +38,19 @@ export function ChapterBigBang() {
 
       <MathBlock
         title={p("Планковское время", "Planck time")}
-        formula="t_P = √(ℏ G / c⁵)"
+        historyId="planck-time"
+        formula="t_P = \sqrt{\dfrac{\hbar\, G}{c^5}}"
         caption={p("Это единственная комбинация трёх «коренных» постоянных природы, имеющая размерность времени.", "It's the only combination of nature's three master constants that has the dimension of time.")}
         legend={[
-          { sym: "ℏ", meaning: p("приведённая постоянная Планка — масштаб квантовой механики", "reduced Planck's constant — the scale of quantum mechanics") },
+          { sym: "\\hbar", meaning: p("приведённая постоянная Планка — масштаб квантовой механики", "reduced Planck's constant — the scale of quantum mechanics") },
           { sym: "G", meaning: p("гравитационная постоянная — сила гравитации", "Newton's constant — the strength of gravity") },
           { sym: "c", meaning: p("скорость света в вакууме", "speed of light in vacuum") },
         ]}
         steps={[
-          { eq: "ℏ ≈ 1.055 × 10⁻³⁴ Дж·с", note: p("Подставляем приведённую постоянную Планка.", "Plug in the reduced Planck constant.") },
-          { eq: "G ≈ 6.674 × 10⁻¹¹ м³/(кг·с²)", note: p("Подставляем гравитационную постоянную.", "Plug in Newton's gravitational constant.") },
-          { eq: "c ≈ 3 × 10⁸ м/с", note: p("Скорость света — 300 000 км/с.", "Speed of light — 300 000 km/s.") },
-          { eq: "t_P ≈ 5.39 × 10⁻⁴⁴ s", note: p("Получаем минимальный «тик» Вселенной.", "Out comes the Universe's smallest tick.") },
+          { eq: "\\hbar \\approx 1.055 \\times 10^{-34}\\ \\text{Дж}\\cdot\\text{с}", note: p("Подставляем приведённую постоянную Планка.", "Plug in the reduced Planck constant.") },
+          { eq: "G \\approx 6.674 \\times 10^{-11}\\ \\text{м}^3/(\\text{кг}\\cdot\\text{с}^2)", note: p("Подставляем гравитационную постоянную.", "Plug in Newton's gravitational constant.") },
+          { eq: "c \\approx 3 \\times 10^{8}\\ \\text{м/с}", note: p("Скорость света — 300 000 км/с.", "Speed of light — 300 000 km/s.") },
+          { eq: "t_P \\approx 5.39 \\times 10^{-44}\\ \\text{с}", note: p("Получаем минимальный «тик» Вселенной.", "Out comes the Universe's smallest tick.") },
         ]}
       />
 
@@ -76,7 +77,7 @@ export function ChapterBigBang() {
           })}
         </p>
         <MathBlock
-          formula="T (МэВ) ≈ 1 / √(t / s)"
+          formula="T\ [\text{МэВ}] \approx \dfrac{1}{\sqrt{t/\text{с}}}"
           caption={p("Очень грубая оценка: возьми время в секундах, извлеки корень и переверни — получишь температуру в мегаэлектронвольтах.", "Very rough rule of thumb: take time in seconds, square-root and invert to get temperature in megaelectronvolts.")}
         />
         <p style={{ marginTop: 8 }}>

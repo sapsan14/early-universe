@@ -47,11 +47,12 @@ export function ChapterDawn() {
 
       <MathBlock
         title={p("Подавление амплитуды CMB", "CMB amplitude suppression")}
-        formula="C_ℓ → C_ℓ · e^{−2τ}"
+        historyId="reionization-tau"
+        formula="C_\ell \rightarrow C_\ell \cdot e^{-2\tau}"
         caption={p("Чем больше τ, тем сильнее «приглушается» исходный CMB на больших ℓ.", "The bigger τ, the more the original CMB on small angular scales gets muted.")}
         legend={[
-          { sym: "τ", meaning: p("оптическая глубина реионизации — доля рассеянных фотонов", "reionization optical depth — fraction of scattered photons") },
-          { sym: "C_ℓ", meaning: p("исходный спектр CMB", "original CMB spectrum") },
+          { sym: "\\tau", meaning: p("оптическая глубина реионизации — доля рассеянных фотонов", "reionization optical depth — fraction of scattered photons") },
+          { sym: "C_\\ell", meaning: p("исходный спектр CMB", "original CMB spectrum") },
         ]}
       />
 

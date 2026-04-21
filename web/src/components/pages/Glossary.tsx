@@ -4,6 +4,7 @@ import { useT, p } from "../../i18n";
 import { GLOSSARY } from "../../glossary";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
+import { Tex } from "../ui/Math";
 
 const CATEGORIES: { id: string; label: { ru: string; en: string }; tone: any }[] = [
   { id: "all", label: { ru: "Всё", en: "All" }, tone: "starlight" },
@@ -96,8 +97,9 @@ export function Glossary() {
                 {t(e.short)}
               </strong>
               {e.symbol && (
-                <span style={{ fontFamily: theme.font.math, color: theme.color.plasma, fontSize: 15 }}>
-                  {e.symbol}{e.unit ? ` (${e.unit})` : ""}
+                <span style={{ color: theme.color.plasma, fontSize: 15, display: "inline-flex", alignItems: "baseline", gap: 4 }}>
+                  <Tex>{e.symbol}</Tex>
+                  {e.unit ? <span style={{ color: theme.color.inkDim, fontSize: 12 }}>({e.unit})</span> : null}
                 </span>
               )}
             </div>
@@ -107,14 +109,16 @@ export function Glossary() {
             {e.formula && (
               <div style={{
                 marginTop: 10,
-                padding: "6px 10px",
+                padding: "8px 10px",
                 borderRadius: 6,
                 background: "rgba(94,226,255,0.06)",
                 border: "1px solid rgba(94,226,255,0.2)",
                 color: theme.color.plasma,
-                fontFamily: theme.font.math,
-                fontSize: 14,
-              }}>{e.formula}</div>
+                textAlign: "center",
+                fontSize: 15,
+              }}>
+                <Tex>{e.formula}</Tex>
+              </div>
             )}
             {e.analogy && (
               <div style={{

@@ -58,11 +58,12 @@ export function ChapterBBN() {
       </p>
       <MathBlock
         title={p("Доля гелия", "Helium fraction")}
-        formula="Y_p = (2 · n / (n + p)) ≈ 0.25"
+        historyId="helium-fraction"
+        formula="Y_p = \dfrac{2\, n}{n + p} \approx 0.25"
         caption={p("Почти не зависит от космологических параметров — это одно из лучших предсказаний BBN.", "Almost independent of cosmological parameters — one of BBN's strongest predictions.")}
         legend={[
           { sym: "Y_p", meaning: p("массовая доля гелия-4", "helium-4 mass fraction") },
-          { sym: "n / p", meaning: p("отношение нейтронов к протонам в момент заморозки ≈ 1/7", "neutron-to-proton ratio at freeze-out ≈ 1/7") },
+          { sym: "n/p", meaning: p("отношение нейтронов к протонам в момент заморозки ≈ 1/7", "neutron-to-proton ratio at freeze-out ≈ 1/7") },
         ]}
       />
 

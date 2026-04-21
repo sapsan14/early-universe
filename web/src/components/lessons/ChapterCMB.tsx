@@ -54,12 +54,13 @@ export function ChapterCMB() {
 
       <MathBlock
         title={p("Спектр мощности CMB", "CMB power spectrum")}
-        formula="D_ℓ = ℓ(ℓ+1) C_ℓ / (2π)"
+        historyId="cmb-power-spectrum"
+        formula="D_\ell = \dfrac{\ell(\ell+1)\, C_\ell}{2\pi}"
         caption={p("Сколько «энергии» в флуктуациях температуры на каждом угловом масштабе.", "How much temperature-fluctuation 'energy' lives on each angular scale.")}
         legend={[
-          { sym: "ℓ", meaning: p("номер мультиполя — мелкость рисунка. Большое ℓ — мелкая рябь.", "multipole index — fineness of the pattern. Large ℓ = fine ripples.") },
-          { sym: "C_ℓ", meaning: p("дисперсия на этом мультиполе — насколько «громко» звучит нота", "variance at that multipole — how 'loud' the note plays") },
-          { sym: "D_ℓ", meaning: p("приведённая мощность, удобная для глаза", "rescaled power, easier on the eye") },
+          { sym: "\\ell", meaning: p("номер мультиполя — мелкость рисунка. Большое ℓ — мелкая рябь.", "multipole index — fineness of the pattern. Large ℓ = fine ripples.") },
+          { sym: "C_\\ell", meaning: p("дисперсия на этом мультиполе — насколько «громко» звучит нота", "variance at that multipole — how 'loud' the note plays") },
+          { sym: "D_\\ell", meaning: p("приведённая мощность, удобная для глаза", "rescaled power, easier on the eye") },
         ]}
       />
 

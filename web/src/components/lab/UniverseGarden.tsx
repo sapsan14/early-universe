@@ -57,6 +57,7 @@ export function UniverseGarden() {
   }, [playing, data]);
 
   // render snapshot
+  const [strength, setStrength] = useState(0);
   useEffect(() => {
     if (!data || !canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -66,30 +67,37 @@ export function UniverseGarden() {
     const N = snap.length;
     canvas.width = N; canvas.height = N;
     const flat = snap.flat();
-    let min = Infinity, max = -Infinity;
-    for (const v of flat) { if (v < min) min = v; if (v > max) max = v; }
+    let min = Infinity, max = -Infinity, sum = 0, sumSq = 0;
+    for (const v of flat) {
+      if (v < min) min = v; if (v > max) max = v;
+      sum += v; sumSq += v * v;
+    }
+    const mean = sum / flat.length;
+    const variance = Math.max(sumSq / flat.length - mean * mean, 0);
+    const std = Math.sqrt(variance);
+    setStrength(std);
     const range = max - min || 1;
     const img = ctx.createImageData(N, N);
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
         const v = (snap[y][x] - min) / range;
         const i = (y * N + x) * 4;
-        // Cosmic ramp: indigo → magenta → gold
-        if (v < 0.4) {
-          const u = v / 0.4;
-          img.data[i] = 10 + 80 * u;
-          img.data[i + 1] = 14 + 30 * u;
-          img.data[i + 2] = 60 + 130 * u;
-        } else if (v < 0.75) {
-          const u = (v - 0.4) / 0.35;
-          img.data[i] = 90 + 165 * u;
-          img.data[i + 1] = 44 + 60 * u;
-          img.data[i + 2] = 190 - 100 * u;
+        // Higher-contrast cosmic ramp
+        if (v < 0.35) {
+          const u = v / 0.35;
+          img.data[i] = 6 + 70 * u;
+          img.data[i + 1] = 10 + 18 * u;
+          img.data[i + 2] = 45 + 155 * u;
+        } else if (v < 0.70) {
+          const u = (v - 0.35) / 0.35;
+          img.data[i] = 76 + 180 * u;
+          img.data[i + 1] = 28 + 52 * u;
+          img.data[i + 2] = 200 - 110 * u;
         } else {
-          const u = (v - 0.75) / 0.25;
+          const u = (v - 0.70) / 0.30;
           img.data[i] = 255;
-          img.data[i + 1] = 104 + 130 * u;
-          img.data[i + 2] = 90 + 80 * u;
+          img.data[i + 1] = 80 + 160 * u;
+          img.data[i + 2] = 90 + 100 * u;
         }
         img.data[i + 3] = 255;
       }
@@ -173,24 +181,72 @@ export function UniverseGarden() {
             display: "flex", justifyContent: "center", alignItems: "center",
             padding: 12,
             minHeight: 360,
+            overflow: "hidden",
           }}>
-            {data ? (
-              <canvas
-                ref={canvasRef}
-                style={{
-                  width: "100%", maxWidth: 480, aspectRatio: "1/1",
-                  imageRendering: "pixelated",
-                  borderRadius: 8,
-                  boxShadow: "0 0 40px rgba(255, 122, 198, 0.35)",
-                }}
-              />
-            ) : (
-              <div style={{ color: theme.color.inkDim, textAlign: "center" }}>
+            <canvas
+              ref={canvasRef}
+              style={{
+                width: "100%", maxWidth: 480, aspectRatio: "1/1",
+                imageRendering: "pixelated",
+                borderRadius: 8,
+                boxShadow: "0 0 40px rgba(255, 122, 198, 0.35)",
+                opacity: data ? 1 : 0.15,
+                transition: theme.motion.base,
+              }}
+            />
+            {loading && (
+              <div style={{
+                position: "absolute", inset: 12,
+                borderRadius: 8,
+                background: "linear-gradient(120deg, rgba(255,122,198,0.0) 30%, rgba(255,255,255,0.12) 50%, rgba(255,122,198,0.0) 70%)",
+                backgroundSize: "200% 100%",
+                animation: "shimmer 1.1s linear infinite",
+                pointerEvents: "none",
+              }} />
+            )}
+            {loading && (
+              <div style={{
+                position: "absolute",
+                top: 18, right: 22,
+                padding: "4px 12px",
+                borderRadius: 999,
+                background: "rgba(5, 6, 15, 0.8)",
+                border: `1px solid ${theme.color.nova}`,
+                color: theme.color.nova,
+                fontSize: 12, fontWeight: 600,
+              }}>
+                {pick({ ru: "пересчёт…", en: "recomputing…" })}
+              </div>
+            )}
+            {!data && !loading && (
+              <div style={{ position: "absolute", color: theme.color.inkDim, textAlign: "center", pointerEvents: "none" }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🌌</div>
-                <div>{pick({ ru: "Нажми «Создать Вселенную»", en: "Press 'Create Universe'" })}</div>
+                <div>{pick({ ru: "Готовлю Вселенную…", en: "Preparing the Universe…" })}</div>
               </div>
             )}
           </div>
+
+          {/* Live structure strength meter — makes slider response unmissable */}
+          {data && (
+            <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: theme.radius.md, background: "rgba(255, 122, 198, 0.06)", border: `1px solid ${theme.color.line}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: theme.color.inkSoft, marginBottom: 6 }}>
+                <span>{pick({ ru: "Сила структуры (σ δρ/ρ)", en: "Structure strength (σ δρ/ρ)" })}</span>
+                <span style={{ color: theme.color.nova, fontFamily: theme.font.mono, fontWeight: 600 }}>{strength.toFixed(3)}</span>
+              </div>
+              <div style={{ position: "relative", height: 8, borderRadius: 999, background: "rgba(255, 255, 255, 0.06)", overflow: "hidden" }}>
+                <div style={{
+                  position: "absolute", left: 0, top: 0, bottom: 0,
+                  width: `${Math.min(100, strength * 40)}%`,
+                  background: "linear-gradient(90deg, #5ee2ff, #9b8cff, #ff7ac6, #ffd56b)",
+                  transition: "width 0.25s cubic-bezier(.2,.8,.2,1)",
+                }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: theme.color.inkDim, marginTop: 4 }}>
+                <span>{pick({ ru: "серая каша", en: "grey mush" })}</span>
+                <span>{pick({ ru: "космическая паутина", en: "cosmic web" })}</span>
+              </div>
+            </div>
+          )}
 
           {data && (
             <>

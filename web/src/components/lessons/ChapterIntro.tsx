@@ -74,7 +74,8 @@ export function ChapterIntro() {
 
       <MathBlock
         title={p("Закон Хаббла", "Hubble's law")}
-        formula="v = H · d"
+        historyId="hubble-law"
+        formula="v = H \cdot d"
         caption={p("Скорость удаления галактики пропорциональна её расстоянию.", "A galaxy's recession speed is proportional to its distance.")}
         legend={[
           { sym: "v", meaning: p("скорость, с которой галактика «убегает» от нас", "the galaxy's recession velocity") },

@@ -52,19 +52,20 @@ export function ChapterIngredients() {
 
       <MathBlock
         title={p("Уравнение Фридмана", "Friedmann equation")}
-        formula="H² = (8πG/3) · (ρ_r + ρ_m + ρ_Λ)"
+        historyId="friedmann"
+        formula="H^2 = \dfrac{8\pi G}{3}\, (\rho_r + \rho_m + \rho_\Lambda)"
         caption={p("Скорость расширения H зависит от плотностей излучения, материи и тёмной энергии.", "The expansion rate H depends on the densities of radiation, matter and dark energy.")}
         legend={[
           { sym: "H", meaning: p("параметр Хаббла — скорость расширения", "Hubble parameter — expansion rate") },
           { sym: "G", meaning: p("гравитационная постоянная Ньютона", "Newton's gravitational constant") },
-          { sym: "ρ_r", meaning: p("плотность энергии излучения", "energy density of radiation") },
-          { sym: "ρ_m", meaning: p("плотность энергии материи (барионы + тёмная)", "energy density of matter (baryons + dark)") },
-          { sym: "ρ_Λ", meaning: p("плотность тёмной энергии", "energy density of dark energy") },
+          { sym: "\\rho_r", meaning: p("плотность энергии излучения", "energy density of radiation") },
+          { sym: "\\rho_m", meaning: p("плотность энергии материи (барионы + тёмная)", "energy density of matter (baryons + dark)") },
+          { sym: "\\rho_\\Lambda", meaning: p("плотность тёмной энергии", "energy density of dark energy") },
         ]}
         steps={[
-          { eq: "ρ_r ∝ a⁻⁴", note: p("Излучение разреживается быстрее всех — расширение растягивает длину волны.", "Radiation dilutes fastest — expansion also stretches wavelengths.") },
-          { eq: "ρ_m ∝ a⁻³", note: p("Материя — пропорционально объёму.", "Matter — inversely with volume.") },
-          { eq: "ρ_Λ = const", note: p("Тёмная энергия не разреживается. Поэтому она «выигрывает» поздно.", "Dark energy doesn't dilute. That's why it wins out late.") },
+          { eq: "\\rho_r \\propto a^{-4}", note: p("Излучение разреживается быстрее всех — расширение растягивает длину волны.", "Radiation dilutes fastest — expansion also stretches wavelengths.") },
+          { eq: "\\rho_m \\propto a^{-3}", note: p("Материя — пропорционально объёму.", "Matter — inversely with volume.") },
+          { eq: "\\rho_\\Lambda = \\text{const}", note: p("Тёмная энергия не разреживается. Поэтому она «выигрывает» поздно.", "Dark energy doesn't dilute. That's why it wins out late.") },
         ]}
       />
 

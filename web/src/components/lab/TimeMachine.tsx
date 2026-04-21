@@ -122,15 +122,57 @@ export function TimeMachine() {
           </div>
 
           {/* Custom timeline visualization */}
-          <div style={{ position: "relative", padding: "20px 0 90px" }}>
+          <div style={{ position: "relative", padding: "16px 0 8px" }}>
+            {/* Rainbow bar */}
             <div aria-hidden style={{
-              position: "absolute", left: 0, right: 0, top: 26,
-              height: 12, borderRadius: 999,
+              position: "absolute", left: 0, right: 0, top: 22,
+              height: 14, borderRadius: 999,
               background:
                 "linear-gradient(90deg, #9b8cff 0%, #ff7ac6 8%, #ff8b5e 18%, #ffd56b 35%, #7afcb1 60%, #5ee2ff 75%, #ff7ac6 100%)",
               opacity: 0.85,
               boxShadow: "0 0 20px rgba(255,138,94,0.45)",
             }} />
+            {/* Glyph icons ON the bar — one per epoch */}
+            <div style={{ position: "absolute", left: 0, right: 0, top: 14, height: 32 }}>
+              {EPOCH_DEFS.map((e) => {
+                const center = (e.log_t_min + e.log_t_max) / 2;
+                const pos = (center - MIN_LT) / (MAX_LT - MIN_LT);
+                const isActive = e.id === localEpochDef.id;
+                return (
+                  <button
+                    key={`glyph-${e.id}`}
+                    onClick={() => setLogT(center)}
+                    title={t(e.name)}
+                    style={{
+                      position: "absolute",
+                      left: `${pos * 100}%`,
+                      top: 0,
+                      transform: `translate(-50%, 0) scale(${isActive ? 1.3 : 1})`,
+                      width: 26, height: 26,
+                      borderRadius: "50%",
+                      border: "none",
+                      display: "grid", placeItems: "center",
+                      background: isActive
+                        ? `radial-gradient(circle, #fff, ${e.color})`
+                        : "rgba(10, 10, 30, 0.65)",
+                      color: isActive ? "#1c1530" : e.color,
+                      fontSize: isActive ? 14 : 12,
+                      cursor: "pointer",
+                      transition: theme.motion.base,
+                      boxShadow: isActive
+                        ? `0 0 0 2px ${e.color}, 0 0 20px ${e.color}`
+                        : `0 0 0 1px ${e.color}55`,
+                      fontWeight: 700,
+                      zIndex: 3,
+                    }}
+                    aria-label={t(e.name)}
+                  >
+                    {e.glyph}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Range input on top of everything */}
             <input
               type="range"
               min={MIN_LT} max={MAX_LT} step={0.05}
@@ -139,78 +181,34 @@ export function TimeMachine() {
               style={{
                 position: "relative", width: "100%",
                 accentColor: theme.color.starlight,
-                marginTop: 14,
+                marginTop: 12,
+                zIndex: 4,
               }}
+              aria-label={pick({ ru: "Время с момента Большого Взрыва", en: "Time since the Big Bang" })}
             />
-            <div aria-hidden style={{
-              position: "absolute",
-              left: `calc(${t01 * 100}% - 24px)`,
-              top: -6,
-              width: 48, height: 48, borderRadius: "50%",
-              background: `radial-gradient(circle, ${localEpochDef.color}, ${localEpochDef.color}33 70%, transparent)`,
-              filter: "blur(2px)",
-              pointerEvents: "none",
-            }} />
-            <div aria-hidden style={{
-              position: "absolute",
-              left: `calc(${t01 * 100}% - 14px)`,
-              top: 12,
-              fontSize: 28,
-              color: localEpochDef.color,
-              textShadow: `0 0 12px ${localEpochDef.color}`,
-              pointerEvents: "none",
-            }}>{localEpochDef.glyph}</div>
+          </div>
 
-            {/* Epoch tick marks */}
-            <div aria-hidden style={{ position: "absolute", left: 0, right: 0, top: 44, height: 6, pointerEvents: "none" }}>
-              {EPOCH_DEFS.map((e) => {
-                const pos = (((e.log_t_min + e.log_t_max) / 2) - MIN_LT) / (MAX_LT - MIN_LT);
-                return (
-                  <div key={`tick-${e.id}`} style={{
-                    position: "absolute",
-                    left: `${pos * 100}%`,
-                    width: 2, height: 6,
-                    background: e.id === localEpochDef.id ? e.color : "rgba(159, 144, 240, 0.55)",
-                    transform: "translateX(-50%)",
-                    borderRadius: 1,
-                  }} />
-                );
-              })}
+          {/* Big current-epoch label (replaces the overlapping row) */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            marginTop: 14, padding: "10px 14px",
+            borderRadius: theme.radius.md,
+            background: `linear-gradient(135deg, ${localEpochDef.color}22, transparent 70%)`,
+            border: `1px solid ${localEpochDef.color}55`,
+          }}>
+            <div style={{ fontSize: 28, color: localEpochDef.color, textShadow: `0 0 12px ${localEpochDef.color}88` }}>
+              {localEpochDef.glyph}
             </div>
-            {/* Epoch markers — click-to-snap, alternating two rows for readability */}
-            <div style={{ position: "absolute", left: 0, right: 0, top: 54, height: 44, pointerEvents: "none" }}>
-              {EPOCH_DEFS.map((e, i) => {
-                const center = (e.log_t_min + e.log_t_max) / 2;
-                const pos = (center - MIN_LT) / (MAX_LT - MIN_LT);
-                const row = i % 2;
-                const isActive = e.id === localEpochDef.id;
-                return (
-                  <button
-                    key={e.id}
-                    onClick={() => setLogT(center)}
-                    title={t(e.name)}
-                    style={{
-                      position: "absolute",
-                      left: `${pos * 100}%`,
-                      top: row * 20,
-                      transform: "translateX(-50%)",
-                      background: isActive ? "rgba(255, 213, 107, 0.14)" : "transparent",
-                      border: isActive ? `1px solid ${e.color}` : "1px solid transparent",
-                      borderRadius: 999,
-                      color: isActive ? e.color : theme.color.inkSoft,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      fontSize: 10.5,
-                      fontWeight: isActive ? 700 : 500,
-                      padding: "2px 8px",
-                      pointerEvents: "auto",
-                      transition: theme.motion.snap,
-                    }}
-                  >
-                    {t(e.short)}
-                  </button>
-                );
-              })}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: localEpochDef.color, fontWeight: 600 }}>
+                {pick({ ru: "Текущая эпоха", en: "Current epoch" })}
+              </div>
+              <div style={{ fontFamily: theme.font.serif, fontSize: 20, color: theme.color.ink, lineHeight: 1.2 }}>
+                {t(localEpochDef.name)}
+              </div>
+            </div>
+            <div style={{ color: theme.color.inkDim, fontSize: 11, textAlign: "right" }}>
+              {pick({ ru: "Клик по иконке — прыгнуть к эпохе", en: "Click any icon to jump to an epoch" })}
             </div>
           </div>
 
@@ -285,7 +283,8 @@ export function TimeMachine() {
             })}
           </p>
           <MathBlock
-            formula="a ∝ t^{1/2} (рад.)  /  a ∝ t^{2/3} (матер.)"
+            historyId="scale-factor-radiation"
+            formula="a \propto t^{1/2}\ \text{(рад.)} \qquad a \propto t^{2/3}\ \text{(матер.)}"
             caption={p("Решение уравнения Фридмана для двух режимов.", "Friedmann equation solved in two regimes.")}
           />
         </Card>

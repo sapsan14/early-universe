@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { theme } from "../../theme";
 import { useT } from "../../i18n";
 import { GLOSSARY, term as lookupTerm } from "../../glossary";
+import { FloatingCard } from "./FloatingCard";
+import { Tex } from "./Math";
 
 /**
- * <Term id="cmb">CMB</Term> — renders a clickable underlined word.
- *
- * Hovering or focusing pops a small definition card. Click pins the card.
- * If no `children` are passed, the glossary's short label is used.
+ * <Term id="cmb">CMB</Term> — dotted-underlined word. Hovering or clicking
+ * opens a portalled popover with the glossary definition, an analogy, and
+ * (if present) the formula. Because the card is portalled it is never cut
+ * off by a scrolling card above it.
  */
 export function Term({
   id,
@@ -19,34 +21,22 @@ export function Term({
   const { t, pick } = useT();
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const entry = lookupTerm(id);
   if (!entry) return <span style={{ color: theme.color.danger }}>?{id}?</span>;
 
-  useEffect(() => {
-    if (!pinned) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) {
-        setPinned(false);
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [pinned]);
-
-  const showCard = open || pinned;
+  const shouldShow = open || pinned;
 
   return (
-    <span
-      ref={ref}
-      style={{ position: "relative", display: "inline-block" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => !pinned && setOpen(false)}
-    >
+    <>
       <button
+        ref={triggerRef}
         type="button"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => !pinned && setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => !pinned && setOpen(false)}
         onClick={(e) => {
           e.stopPropagation();
           setPinned((p) => !p);
@@ -64,93 +54,62 @@ export function Term({
           textDecorationStyle: "dotted",
           textUnderlineOffset: 3,
           textDecorationColor: "rgba(255, 213, 107, 0.55)",
+          display: "inline",
         }}
         aria-describedby={`term-${id}`}
       >
         {children ?? t(entry.short)}
       </button>
-      {showCard && (
-        <span
-          id={`term-${id}`}
-          role="tooltip"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            left: 0,
-            zIndex: theme.zIndex.tooltip,
-            width: 320,
-            background: "linear-gradient(180deg, #1a1147 0%, #0f0a2e 100%)",
-            border: `1px solid ${theme.color.lineStrong}`,
-            borderRadius: theme.radius.md,
-            padding: 14,
-            boxShadow: theme.shadow.starlit,
-            fontFamily: theme.font.sans,
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: theme.color.ink,
-            textAlign: "left",
-            cursor: "default",
-          }}
-        >
-          <div style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            gap: 8,
-            marginBottom: 6,
-          }}>
-            <strong style={{ fontFamily: theme.font.serif, fontSize: 15, color: theme.color.starlight }}>
-              {t(entry.short)}
-            </strong>
-            {entry.symbol && (
-              <span style={{
-                fontFamily: theme.font.math,
-                color: theme.color.plasma,
-                fontSize: 14,
-              }}>{entry.symbol}{entry.unit ? ` (${entry.unit})` : ""}</span>
-            )}
-          </div>
-          <div style={{ marginBottom: entry.analogy || entry.formula ? 8 : 0 }}>
-            {t(entry.definition)}
-          </div>
-          {entry.formula && (
-            <div style={{
-              fontFamily: theme.font.math,
-              fontSize: 14,
-              padding: "6px 10px",
-              borderRadius: 6,
-              background: "rgba(94, 226, 255, 0.08)",
-              border: "1px solid rgba(94, 226, 255, 0.25)",
-              color: theme.color.plasma,
-              marginBottom: entry.analogy ? 8 : 0,
-            }}>{entry.formula}</div>
+      <FloatingCard
+        anchor={triggerRef.current}
+        open={shouldShow}
+        width={340}
+        onRequestClose={pinned ? () => { setPinned(false); setOpen(false); } : undefined}
+      >
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+          <strong style={{ fontFamily: theme.font.serif, fontSize: 15, color: theme.color.starlight }}>
+            {t(entry.short)}
+          </strong>
+          {entry.symbol && (
+            <span style={{ color: theme.color.plasma, fontSize: 14, display: "inline-flex", alignItems: "baseline", gap: 4 }}>
+              <Tex>{entry.symbol}</Tex>
+              {entry.unit ? <span style={{ color: theme.color.inkDim, fontSize: 12 }}>({entry.unit})</span> : null}
+            </span>
           )}
-          {entry.analogy && (
-            <div style={{
-              fontStyle: "italic",
-              color: theme.color.inkSoft,
-              fontSize: 12,
-              borderLeft: `2px solid ${theme.color.starlight}`,
-              paddingLeft: 8,
-            }}>
-              {pick({
-                ru: "Аналогия: ",
-                en: "Analogy: ",
-              })}{t(entry.analogy)}
-            </div>
-          )}
+        </div>
+        <div style={{ marginBottom: entry.analogy || entry.formula ? 8 : 0 }}>
+          {t(entry.definition)}
+        </div>
+        {entry.formula && (
           <div style={{
-            marginTop: 8,
-            fontSize: 11,
-            color: theme.color.inkDim,
-            textTransform: "uppercase",
-            letterSpacing: 1,
+            padding: "6px 10px",
+            borderRadius: 6,
+            background: "rgba(94, 226, 255, 0.08)",
+            border: "1px solid rgba(94, 226, 255, 0.25)",
+            color: theme.color.plasma,
+            marginBottom: entry.analogy ? 8 : 0,
+            fontSize: 15,
+            textAlign: "center",
           }}>
-            {entry.category}{pinned ? pick({ ru: " · закреплено", en: " · pinned" }) : ""}
+            <Tex>{entry.formula}</Tex>
           </div>
-        </span>
-      )}
-    </span>
+        )}
+        {entry.analogy && (
+          <div style={{
+            fontStyle: "italic",
+            color: theme.color.inkSoft,
+            fontSize: 12,
+            borderLeft: `2px solid ${theme.color.starlight}`,
+            paddingLeft: 8,
+          }}>
+            {pick({ ru: "Аналогия: ", en: "Analogy: " })}{t(entry.analogy)}
+          </div>
+        )}
+        <div style={{ marginTop: 8, fontSize: 11, color: theme.color.inkDim, textTransform: "uppercase", letterSpacing: 1 }}>
+          {entry.category}{pinned ? pick({ ru: " · закреплено", en: " · pinned" }) : ""}
+        </div>
+      </FloatingCard>
+    </>
   );
 }
 

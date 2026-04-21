@@ -41,17 +41,18 @@ export function ChapterInflation() {
       <h3>{pick({ ru: "Сколько именно?", en: "How much, exactly?" })}</h3>
       <MathBlock
         title={p("Закон инфляции", "The inflation law")}
-        formula="a(t) = a₀ · e^{H_inf · t}"
+        historyId="inflation"
+        formula="a(t) = a_0 \, e^{H_{\text{inf}}\, t}"
         caption={p("Масштабный фактор a(t) растёт экспоненциально — гораздо быстрее, чем по любому степенному закону.", "The scale factor a(t) grows exponentially — much faster than any power law.")}
         legend={[
           { sym: "a(t)", meaning: p("во сколько раз больше Вселенная в момент t", "how much bigger the Universe is at time t") },
-          { sym: "H_inf", meaning: p("параметр Хаббла во время инфляции — гигантский", "Hubble parameter during inflation — enormous") },
+          { sym: "H_{\\text{inf}}", meaning: p("параметр Хаббла во время инфляции — гигантский", "Hubble parameter during inflation — enormous") },
           { sym: "e", meaning: p("число Эйлера ≈ 2.718, основа экспоненты", "Euler's number ≈ 2.718, base of exponentials") },
         ]}
         steps={[
-          { eq: "Δt ≈ 10⁻³² s, H_inf · Δt ≈ 60", note: p("За такое короткое время — 60 «удвоений» Вселенной.", "In that brief instant — 60 cosmic doublings.") },
-          { eq: "a_конец / a_начало = e⁶⁰", note: p("Каждое удвоение умножает на e ≈ 2.7.", "Each doubling multiplies by e ≈ 2.7.") },
-          { eq: "≈ 10²⁶", note: p("Маковое зёрнышко становится размером с галактику.", "A poppy seed becomes the size of a galaxy.") },
+          { eq: "\\Delta t \\approx 10^{-32}\\ \\text{с},\\ H_{\\text{inf}}\\Delta t \\approx 60", note: p("За такое короткое время — 60 «удвоений» Вселенной.", "In that brief instant — 60 cosmic doublings.") },
+          { eq: "\\dfrac{a_{\\text{конец}}}{a_{\\text{начало}}} = e^{60}", note: p("Каждое удвоение умножает на e ≈ 2.7.", "Each doubling multiplies by e ≈ 2.7.") },
+          { eq: "\\approx 10^{26}", note: p("Маковое зёрнышко становится размером с галактику.", "A poppy seed becomes the size of a galaxy.") },
         ]}
       />
 
@@ -72,12 +73,13 @@ export function ChapterInflation() {
 
       <Callout variant="math" title={p("Спектр первичных флуктуаций", "Primordial fluctuation spectrum")}>
         <MathBlock
-          formula="P(k) = A_s · (k / k_*)^{n_s − 1}"
+          historyId="primordial-spectrum"
+          formula="P(k) = A_s \left( \dfrac{k}{k_\ast} \right)^{n_s - 1}"
           caption={p("Сколько «силы» в флуктуациях каждого пространственного масштаба k.", "How much power lives in fluctuations of each spatial scale k.")}
           legend={[
             { sym: "A_s", meaning: p("общая громкость квантового шёпота", "overall loudness of the quantum whisper") },
             { sym: "n_s", meaning: p("наклон спектра. n_s = 1 — все масштабы равноправны", "spectral tilt. n_s = 1 — every scale equal") },
-            { sym: "k_*", meaning: p("опорный масштаб (обычно 0.05 Mpc⁻¹)", "pivot scale (usually 0.05 Mpc⁻¹)") },
+            { sym: "k_\\ast", meaning: p("опорный масштаб (обычно 0.05 Mpc⁻¹)", "pivot scale (usually 0.05 Mpc⁻¹)") },
           ]}
         />
         <p style={{ marginTop: 8 }}>

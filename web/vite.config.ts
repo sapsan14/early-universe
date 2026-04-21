@@ -1,15 +1,29 @@
-import { defineConfig } from "vite";
+import { createLogger, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 /**
- * Silenced proxy errors: when the Python API isn't running, fetch calls to
- * /api/* will fail with ECONNREFUSED. The frontend already degrades
- * gracefully (each lab falls back to its local approximation), but Vite's
- * default proxy error handler logs every single failure to the dev server
- * console. We swallow those events and reply with a 503 so the frontend's
- * catch() branch is the single source of truth for "is the API up?".
+ * When the Python API isn't running, every fetch to /api/* hits Vite's proxy
+ * and triggers an ECONNREFUSED. The frontend already degrades gracefully
+ * (each lab falls back to its local approximation) — but Vite's proxy plugin
+ * logs its own error line *before* any user-supplied error handler gets a
+ * say, so `server.proxy.*.configure` can't suppress the noise on its own.
+ *
+ * We wrap `createLogger().error` and drop any "http proxy error" messages
+ * that are simply ECONNREFUSED/ENOTFOUND — real bugs still surface.
  */
+const logger = createLogger();
+const origError = logger.error.bind(logger);
+logger.error = (msg, opts) => {
+  if (typeof msg === "string" && msg.includes("http proxy error")) {
+    if (msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND") || msg.includes("ETIMEDOUT")) {
+      return;
+    }
+  }
+  origError(msg, opts);
+};
+
 export default defineConfig({
+  customLogger: logger,
   plugins: [react()],
   server: {
     proxy: {
@@ -44,4 +58,3 @@ export default defineConfig({
     },
   },
 });
-

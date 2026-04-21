@@ -8,7 +8,7 @@ import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Callout } from "../ui/Callout";
 import { Button } from "../ui/Button";
-import { MathBlock } from "../ui/Math";
+import { MathBlock, Tex } from "../ui/Math";
 
 const PRESETS: { id: string; label: { ru: string; en: string }; params: CosmoParams }[] = [
   { id: "planck", label: { ru: "Planck 2018 (наш мир)", en: "Planck 2018 (our world)" }, params: { ...DEFAULT_PARAMS } },
@@ -45,7 +45,13 @@ export function ParameterStudio() {
     return () => clearTimeout(timer);
   }, [params]);
 
-  // Render canvas
+  const [chartLayout, setChartLayout] = useState<{
+    xTicks: { lx: number; xPct: number }[];
+    yTicks: { ly: number; yPct: number }[];
+    padPct: { l: number; r: number; t: number; b: number };
+  } | null>(null);
+
+  // Render canvas (curves + grid only — all text labels live in HTML overlay)
   useEffect(() => {
     if (!spectrum || !canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -74,42 +80,38 @@ export function ParameterStudio() {
     const yMin = Math.min(...all) - 0.4;
     const yMax = Math.max(...all) + 0.4;
 
-    const pad = { l: 56, r: 16, t: 14, b: 36 };
+    const pad = { l: 64, r: 16, t: 14, b: 42 };
     const pw = w - pad.l - pad.r;
     const ph = h - pad.t - pad.b;
     const toX = (lx: number) => pad.l + ((lx - xMin) / (xMax - xMin)) * pw;
     const toY = (ly: number) => pad.t + ((yMax - ly) / (yMax - yMin)) * ph;
 
-    // Grid
-    ctx.strokeStyle = "rgba(159, 144, 240, 0.18)";
+    // Grid lines (no labels — those are HTML)
+    ctx.strokeStyle = "rgba(159, 144, 240, 0.22)";
     ctx.lineWidth = 1;
-    ctx.font = "11px ui-monospace,monospace";
-    ctx.fillStyle = "rgba(169,177,214,0.7)";
+    const xLabels: { lx: number; xPct: number }[] = [];
     for (let lx = Math.ceil(xMin); lx <= xMax; lx++) {
       const x = toX(lx);
       ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
-      ctx.fillText(`10^${lx}`, x - 14, h - pad.b + 14);
+      xLabels.push({ lx, xPct: (x / w) * 100 });
     }
+    const yLabels: { ly: number; yPct: number }[] = [];
     for (let ly = Math.ceil(yMin); ly <= yMax; ly++) {
       const y = toY(ly);
       ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
-      ctx.fillText(`10^${ly}`, 6, y + 4);
+      yLabels.push({ ly, yPct: (y / h) * 100 });
     }
 
-    // Axis labels
-    ctx.fillStyle = "rgba(232,236,255,0.85)";
-    ctx.font = "12px Inter";
-    ctx.fillText(pick({ ru: "Мультиполь ℓ", en: "Multipole ℓ" }), w / 2 - 30, h - 4);
-    ctx.save();
-    ctx.translate(14, h / 2 + 40); ctx.rotate(-Math.PI / 2);
-    ctx.fillText("ℓ(ℓ+1)Cℓ / (2π)  [μK²]", 0, 0);
-    ctx.restore();
+    // Plot frame
+    ctx.strokeStyle = "rgba(159, 144, 240, 0.45)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pad.l, pad.t, pw, ph);
 
     // Reference (Planck 2018) line
     if (b && showRef) {
-      ctx.strokeStyle = "rgba(255, 213, 107, 0.45)";
+      ctx.strokeStyle = "rgba(255, 213, 107, 0.55)";
       ctx.setLineDash([6, 4]);
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       for (let i = 0; i < b.ell.length; i++) {
         const x = toX(Math.log10(b.ell[i]));
@@ -126,9 +128,9 @@ export function ParameterStudio() {
     grad.addColorStop(0.5, "#9b8cff");
     grad.addColorStop(1, "#ff7ac6");
     ctx.strokeStyle = grad;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.8;
     ctx.shadowColor = "rgba(155,140,255,0.6)";
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 10;
     ctx.beginPath();
     for (let i = 0; i < a.ell.length; i++) {
       const x = toX(Math.log10(a.ell[i]));
@@ -148,7 +150,13 @@ export function ParameterStudio() {
       ctx.stroke();
       ctx.setLineDash([]);
     }
-  }, [spectrum, reference, showRef, pick, hover]);
+
+    setChartLayout({
+      xTicks: xLabels,
+      yTicks: yLabels,
+      padPct: { l: (pad.l / w) * 100, r: (pad.r / w) * 100, t: (pad.t / h) * 100, b: (pad.b / h) * 100 },
+    });
+  }, [spectrum, reference, showRef, hover]);
 
   return (
     <div style={{ display: "grid", gap: 24, gridTemplateColumns: "320px minmax(0, 1fr)" }} className="lab-grid">
@@ -287,6 +295,56 @@ export function ParameterStudio() {
             onMouseLeave={() => setHover(null)}
           >
             <canvas ref={canvasRef} style={{ width: "100%", display: "block" }} />
+            {/* X-axis tick labels (HTML — crisp, positioned in percent) */}
+            {chartLayout && chartLayout.xTicks.map((t) => (
+              <div key={`xl-${t.lx}`} style={{
+                position: "absolute",
+                left: `${t.xPct}%`,
+                bottom: 10,
+                transform: "translateX(-50%)",
+                color: theme.color.inkSoft,
+                fontSize: 11,
+                fontFamily: theme.font.mono,
+                pointerEvents: "none",
+                whiteSpace: "nowrap",
+              }}>10<sup>{t.lx}</sup></div>
+            ))}
+            {/* Y-axis tick labels */}
+            {chartLayout && chartLayout.yTicks.map((t) => (
+              <div key={`yl-${t.ly}`} style={{
+                position: "absolute",
+                top: `${t.yPct}%`,
+                left: 8,
+                transform: "translateY(-50%)",
+                color: theme.color.inkSoft,
+                fontSize: 11,
+                fontFamily: theme.font.mono,
+                pointerEvents: "none",
+                whiteSpace: "nowrap",
+              }}>10<sup>{t.ly}</sup></div>
+            ))}
+            {/* X-axis title */}
+            <div style={{
+              position: "absolute",
+              left: "50%", bottom: -8,
+              transform: "translateX(-50%)",
+              color: theme.color.ink,
+              fontSize: 13,
+              pointerEvents: "none",
+            }}>{pick({ ru: "Мультиполь", en: "Multipole" })} <Tex>{"\\ell"}</Tex></div>
+            {/* Y-axis title */}
+            <div style={{
+              position: "absolute",
+              left: -12, top: "50%",
+              transform: "rotate(-90deg) translateX(-50%)",
+              transformOrigin: "left center",
+              color: theme.color.ink,
+              fontSize: 13,
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+            }}>
+              <Tex>{"D_\\ell\\ [\\mu\\text{K}^2]"}</Tex>
+            </div>
             {hover && (
               <div style={{
                 position: "absolute",
@@ -313,7 +371,8 @@ export function ParameterStudio() {
             })}
           </p>
           <MathBlock
-            formula="D_ℓ = ℓ(ℓ + 1) C_ℓ / (2π)"
+            historyId="dl-rescaling"
+            formula="D_\ell = \dfrac{\ell(\ell + 1)\, C_\ell}{2\pi}"
             caption={p("Так удобно отображать спектр — он становится почти плоским на больших ℓ.", "A convenient form — it makes the spectrum nearly flat at large ℓ.")}
           />
         </Card>

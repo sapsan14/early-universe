@@ -46,7 +46,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Самый короткий промежуток времени, имеющий физический смысл: меньше — и наша теория уже не работает.",
       en: "The shortest physically meaningful time interval — below it our current theory of gravity breaks down.",
     },
-    formula: "t_P = √(ħG/c⁵)",
+    formula: "t_P = \\sqrt{\\hbar G / c^5}",
     analogy: {
       ru: "Это как минимальное «деление линейки» у времени.",
       en: "Think of it as the smallest tick mark on the cosmic ruler of time.",
@@ -123,7 +123,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Растяжение длины волны света по мере расширения Вселенной. Чем больше z, тем дальше и древнее объект.",
       en: "The stretching of light's wavelength as the Universe expands. The bigger z, the farther and older the source.",
     },
-    formula: "1 + z = λ_obs / λ_emit = 1 / a",
+    formula: "1 + z = \\dfrac{\\lambda_{\\text{obs}}}{\\lambda_{\\text{emit}}} = \\dfrac{1}{a}",
     analogy: {
       ru: "Как свисток уезжающего поезда звучит ниже, у уходящих от нас галактик свет «краснеет».",
       en: "Just as a receding train's whistle drops in pitch, light from receding galaxies shifts toward red.",
@@ -138,7 +138,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Безразмерное число, описывающее «во сколько раз сейчас Вселенная больше, чем когда-то». Сегодня a = 1.",
       en: "A dimensionless number telling us how much bigger the Universe is now compared to some earlier time. Today a = 1.",
     },
-    formula: "L(t) = a(t) · L₀",
+    formula: "L(t) = a(t)\\, L_0",
   }),
   G({
     id: "hubble",
@@ -150,7 +150,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Скорость, с которой расширяется Вселенная сегодня (на единицу расстояния). H₀ ≈ 67–73 км/с на каждый Мпк.",
       en: "The current expansion rate of the Universe per unit distance. H₀ ≈ 67–73 km/s per megaparsec.",
     },
-    formula: "v = H · d",
+    formula: "v = H \\cdot d",
     analogy: {
       ru: "На каждый мегапарсек дальше — добавь ~70 км/с скорости разбегания.",
       en: "For every megaparsec farther away, add about 70 km/s to the recession speed.",
@@ -164,7 +164,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Главное уравнение космологии: связывает скорость расширения H с плотностью энергии.",
       en: "Cosmology's master equation: it ties the expansion rate H to the energy density.",
     },
-    formula: "H² = (8πG/3) ρ − k c²/a²",
+    formula: "H^2 = \\dfrac{8\\pi G}{3}\\rho - \\dfrac{k c^2}{a^2}",
   }),
   G({
     id: "dark-matter",
@@ -273,7 +273,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.fromEntries([
       ru: "Сколько «силы» содержат флуктуации на каждом угловом масштабе. Главный язык, на котором космологи разговаривают с CMB.",
       en: "How much power is in fluctuations at each angular scale — the language cosmologists use to read the CMB.",
     },
-    formula: "D_ℓ = ℓ(ℓ+1) C_ℓ / (2π)",
+    formula: "D_\\ell = \\dfrac{\\ell(\\ell+1) C_\\ell}{2\\pi}",
   }),
   G({
     id: "gaussian",
