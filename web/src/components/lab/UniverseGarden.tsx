@@ -88,23 +88,26 @@ export function UniverseGarden() {
         // Normalise, clip into [0, 1]
         let v = (snap[y][x] - lo) / range;
         v = Math.max(0, Math.min(1, v));
-        // Gamma stretch darkens voids, brightens peaks → richer contrast
-        v = Math.pow(v, 0.72);
+        // Aggressive gamma lifts the midtones so a mostly-Gaussian field
+        // looks colourful even when it sits around 0.3–0.5 of the range.
+        v = Math.pow(v, 0.45);
         const i = (y * N + x) * 4;
-        // Five-stop vivid colormap: black → indigo → magenta → amber → cream
+        // Inferno-inspired 5-stop ramp: deep violet → magenta → orange →
+        // amber → cream. No near-black region so the canvas never looks
+        // empty even at low A_s.
         let r, g, b;
-        if (v < 0.22) {
-          const u = v / 0.22;
-          r = 4 + 30 * u; g = 2 + 8 * u; b = 18 + 72 * u;
+        if (v < 0.25) {
+          const u = v / 0.25;
+          r = 22 + 68 * u; g = 8 + 14 * u; b = 58 + 102 * u;
         } else if (v < 0.50) {
-          const u = (v - 0.22) / 0.28;
-          r = 34 + 180 * u; g = 10 + 30 * u; b = 90 + 100 * u;
-        } else if (v < 0.78) {
-          const u = (v - 0.50) / 0.28;
-          r = 214 + 40 * u; g = 40 + 130 * u; b = 190 - 110 * u;
+          const u = (v - 0.25) / 0.25;
+          r = 90 + 130 * u; g = 22 + 38 * u; b = 160 - 40 * u;
+        } else if (v < 0.75) {
+          const u = (v - 0.50) / 0.25;
+          r = 220 + 35 * u; g = 60 + 105 * u; b = 120 - 95 * u;
         } else {
-          const u = (v - 0.78) / 0.22;
-          r = 254; g = 170 + 70 * u; b = 80 + 150 * u;
+          const u = (v - 0.75) / 0.25;
+          r = 255; g = 165 + 80 * u; b = 25 + 190 * u;
         }
         img.data[i] = r;
         img.data[i + 1] = g;

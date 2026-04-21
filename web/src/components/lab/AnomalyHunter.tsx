@@ -29,16 +29,20 @@ function generateMap(size: number, seed: number, contamination: number): number[
     for (let x = 0; x < size; x++) row.push(gauss() * 80);
     m.push(row);
   }
-  // Two passes of box-blur give CMB-like correlated patches
+  // Three passes of clamped-boundary box-blur give CMB-like correlated patches.
+  // Clamping (not skipping) the border means the outer 1-px ring also gets
+  // smoothed — otherwise raw Gaussian noise on the edge dominates the σ
+  // ranking and every anomaly candidate ends up stuck to the border.
+  const clamp = (v: number, n: number) => Math.max(0, Math.min(n - 1, v));
   let smoothed = m.map((r) => r.slice());
   for (let pass = 0; pass < 3; pass++) {
     const next = smoothed.map((r) => r.slice());
-    for (let y = 1; y < size - 1; y++) {
-      for (let x = 1; x < size - 1; x++) {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
         let sum = 0;
         for (let dy = -1; dy <= 1; dy++)
           for (let dx = -1; dx <= 1; dx++)
-            sum += smoothed[y + dy][x + dx];
+            sum += smoothed[clamp(y + dy, size)][clamp(x + dx, size)];
         next[y][x] = sum / 9;
       }
     }

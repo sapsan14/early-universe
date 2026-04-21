@@ -381,19 +381,22 @@ export function localPlayable(params: CosmoParams, gridSize = 96, nSteps = 12, s
   const w = weights.map((x) => x / wSum);
 
   // Upsample each octave to N×N via bilinear interpolation and sum.
+  // Indices clamp to [0, s-1] (no modulo wrap) so the right/bottom edges
+  // don't jump back to the top-left — that jump was visible as a bright
+  // 1-pixel ring around the canvas.
   const base: number[][] = Array.from({ length: N }, () => new Array(N).fill(0));
   for (let o = 0; o < octaves.length; o++) {
     const f = octaves[o];
     const s = octaveSizes[o];
     for (let y = 0; y < N; y++) {
-      const fy = (y / N) * s;
-      const y0 = Math.floor(fy) % s;
-      const y1 = (y0 + 1) % s;
+      const fy = (y / (N - 1)) * (s - 1);
+      const y0 = Math.min(Math.floor(fy), s - 1);
+      const y1 = Math.min(y0 + 1, s - 1);
       const ty = fy - Math.floor(fy);
       for (let x = 0; x < N; x++) {
-        const fx = (x / N) * s;
-        const x0 = Math.floor(fx) % s;
-        const x1 = (x0 + 1) % s;
+        const fx = (x / (N - 1)) * (s - 1);
+        const x0 = Math.min(Math.floor(fx), s - 1);
+        const x1 = Math.min(x0 + 1, s - 1);
         const tx = fx - Math.floor(fx);
         const a = f[y0][x0] * (1 - tx) + f[y0][x1] * tx;
         const b = f[y1][x0] * (1 - tx) + f[y1][x1] * tx;
@@ -420,21 +423,40 @@ export function localPlayable(params: CosmoParams, gridSize = 96, nSteps = 12, s
   const redshifts: number[] = [];
   const scaleFactors: number[] = [];
 
+  const clampIdx = (v: number, n: number) => Math.max(0, Math.min(n - 1, v));
+
   for (let step = 0; step < nSteps; step++) {
     const t = (step + 1) / nSteps;
-    // δ = amp × base field — amplitude grows through the simulation
-    const linAmp = asFactor * omFactor * expansionDrag * t ** 1.3;
-    // Non-linear factor — amplifies crests into filaments, flattens voids
-    const nlCoeff = 0.5 * Math.pow(params.Omega_cdm_h2 / 0.12, 0.3);
-    const snap: number[][] = [];
+    // δ = amp × base field — amplitude grows through the simulation.
+    // The factor 2.5 amplifies contrast so even modest parameters produce
+    // a visibly non-Gaussian field.
+    const linAmp = 2.5 * asFactor * omFactor * expansionDrag * t ** 1.3;
+    // Non-linear factor — amplifies crests into filaments, flattens voids.
+    const nlCoeff = 0.9 * Math.pow(params.Omega_cdm_h2 / 0.12, 0.3);
+
+    // Raw δ
+    const raw: number[][] = [];
     for (let y = 0; y < N; y++) {
       const row: number[] = [];
       for (let x = 0; x < N; x++) {
         const lin = base[y][x] * linAmp;
-        // Spherical-collapse-like non-linearity: δ → δ + nl × max(0, δ)^2
         const pos = Math.max(lin, 0);
-        const delta = lin + nlCoeff * pos * pos;
-        row.push(delta);
+        row.push(lin + nlCoeff * pos * pos);
+      }
+      raw.push(row);
+    }
+    // Post-smoothing pass: one clamped-boundary box blur so the sharp
+    // peaks spread into connected filaments — "cosmic web" look instead
+    // of "isolated dots on a dark background".
+    const snap: number[][] = [];
+    for (let y = 0; y < N; y++) {
+      const row: number[] = new Array(N);
+      for (let x = 0; x < N; x++) {
+        let sum = 0;
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++)
+            sum += raw[clampIdx(y + dy, N)][clampIdx(x + dx, N)];
+        row[x] = sum / 9;
       }
       snap.push(row);
     }
