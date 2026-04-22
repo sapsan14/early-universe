@@ -537,13 +537,16 @@ export function localAnomaly(map: number[][], threshold = 3): AnomalyResponse {
       }
     }
   }
-  // Cap candidates to top-N to avoid clutter
+  // Keep ALL detections for the count ("Найдено кандидатов: 37" feels honest
+  // when the threshold is 1σ over a 96² map), but draw at most 12 halos so
+  // the map doesn't turn into a ring of circles.
+  const totalDetected = candidates.length;
   candidates.sort((a, b) => b.score - a.score);
   const top = candidates.slice(0, 12);
 
   return {
     global_score: skew ** 2 + (kurt - 3) ** 2,
-    n_anomalies: top.length,
+    n_anomalies: totalDetected,
     candidates: top,
     non_gaussianity: {
       skewness: skew,

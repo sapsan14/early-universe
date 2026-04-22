@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { theme } from "../../theme";
 import { useT, p } from "../../i18n";
 import { post, DEFAULT_PARAMS, type TimelineResponse } from "../../api/client";
-import { EPOCH_DEFS, buildLocalEpoch, findEpoch } from "../../physics";
+import { EPOCH_DEFS, buildLocalEpoch, findEpoch, computeState } from "../../physics";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Callout } from "../ui/Callout";
 import { Term } from "../ui/Term";
 import { MathBlock } from "../ui/Math";
+import { MiniChart } from "../ui/MiniChart";
 
 const MIN_LT = -43;
 const MAX_LT = 17.64;
@@ -47,6 +48,26 @@ export function TimeMachine() {
 
   const localEpochDef = useMemo(() => findEpoch(logT), [logT]);
   const epoch = data?.epoch ?? buildLocalEpoch(logT, DEFAULT_PARAMS, lang);
+
+  // Pre-sample the full evolution curves once, for the mini-charts.
+  const curves = useMemo(() => {
+    const N = 220;
+    const xs: number[] = [];
+    const aArr: number[] = [];
+    const zArr: number[] = [];
+    const TArr: number[] = [];
+    const HArr: number[] = [];
+    for (let i = 0; i < N; i++) {
+      const lt = MIN_LT + (i / (N - 1)) * (MAX_LT - MIN_LT);
+      xs.push(lt);
+      const s = computeState(lt, DEFAULT_PARAMS);
+      aArr.push(s.scale_factor);
+      zArr.push(Math.max(s.redshift, 0));
+      TArr.push(s.temperature_K);
+      HArr.push(Math.max(s.hubble_parameter, 1e-10));
+    }
+    return { xs, aArr, zArr, TArr, HArr };
+  }, []);
 
   // Fetch from API with debounce, fall back to local on error
   useEffect(() => {
@@ -212,33 +233,69 @@ export function TimeMachine() {
             </div>
           </div>
 
-          {/* Numbers */}
+          {/* Metrics: simple chips for the non-plottable ones, mini-charts
+              with a moving cursor for the quantities that change over t. */}
           <div style={{
-            display: "grid", gap: 12,
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            marginTop: 28,
+            display: "grid", gap: 10,
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            marginTop: 24,
           }}>
-            {[
-              { label: pick({ ru: "Время после ББ", en: "Time after BB" }), value: formatTimeAgo(epoch.time_seconds, lang), term: "big-bang" },
-              { label: pick({ ru: "Красное смещение z", en: "Redshift z" }), value: fmt(epoch.redshift), term: "redshift" },
-              { label: pick({ ru: "Температура T", en: "Temperature T" }), value: `${fmt(epoch.temperature_K)} K`, term: undefined },
-              { label: pick({ ru: "Масштабный фактор a", en: "Scale factor a" }), value: fmt(epoch.scale_factor), term: "scale-factor" },
-              { label: pick({ ru: "H — Хаббл", en: "H — Hubble" }), value: `${fmt(epoch.hubble_parameter)} km/s/Mpc`, term: "hubble" },
-              { label: pick({ ru: "Доминирует", en: "Dominant" }), value: epoch.dominant_component, term: undefined },
-            ].map((row, i) => (
-              <div key={i} style={{
-                padding: 14, borderRadius: theme.radius.md,
-                background: "rgba(155, 140, 255, 0.05)",
-                border: `1px solid ${theme.color.line}`,
-              }}>
-                <div style={{ color: theme.color.inkSoft, fontSize: 12, marginBottom: 6 }}>
-                  {row.term ? <Term id={row.term}>{row.label}</Term> : row.label}
-                </div>
-                <div style={{ fontFamily: theme.font.mono, color: theme.color.starlight, fontSize: 15, fontWeight: 600, wordBreak: "break-word", lineHeight: 1.35 }}>
-                  {row.value}
-                </div>
+            <div style={{
+              padding: 12, borderRadius: theme.radius.sm,
+              background: "rgba(155, 140, 255, 0.05)",
+              border: `1px solid ${theme.color.line}`,
+            }}>
+              <div style={{ color: theme.color.inkSoft, fontSize: 12, marginBottom: 4 }}>
+                <Term id="big-bang">{pick({ ru: "Время после ББ", en: "Time after BB" })}</Term>
               </div>
-            ))}
+              <div style={{ fontFamily: theme.font.mono, color: theme.color.starlight, fontSize: 14, fontWeight: 600, wordBreak: "break-word", lineHeight: 1.3 }}>
+                {formatTimeAgo(epoch.time_seconds, lang)}
+              </div>
+            </div>
+            <div style={{
+              padding: 12, borderRadius: theme.radius.sm,
+              background: "rgba(155, 140, 255, 0.05)",
+              border: `1px solid ${theme.color.line}`,
+            }}>
+              <div style={{ color: theme.color.inkSoft, fontSize: 12, marginBottom: 4 }}>
+                {pick({ ru: "Доминирует", en: "Dominant" })}
+              </div>
+              <div style={{ fontFamily: theme.font.mono, color: localEpochDef.color, fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>
+                {epoch.dominant_component}
+              </div>
+            </div>
+            <MiniChart
+              xs={curves.xs} ys={curves.TArr}
+              cursor={logT}
+              title={pick({ ru: "Температура T (K)", en: "Temperature T (K)" })}
+              value={`${fmt(epoch.temperature_K)} K`}
+              color={theme.color.ember}
+              logY
+            />
+            <MiniChart
+              xs={curves.xs} ys={curves.aArr}
+              cursor={logT}
+              title={pick({ ru: "Масштабный фактор a", en: "Scale factor a" })}
+              value={fmt(epoch.scale_factor)}
+              color={theme.color.aurora}
+              logY
+            />
+            <MiniChart
+              xs={curves.xs} ys={curves.zArr.map((z) => z + 1)}
+              cursor={logT}
+              title={pick({ ru: "Красное смещение 1 + z", en: "Redshift 1 + z" })}
+              value={fmt(epoch.redshift)}
+              color={theme.color.nova}
+              logY
+            />
+            <MiniChart
+              xs={curves.xs} ys={curves.HArr}
+              cursor={logT}
+              title={pick({ ru: "Хаббл H (km/s/Mpc)", en: "Hubble H (km/s/Mpc)" })}
+              value={fmt(epoch.hubble_parameter)}
+              color={theme.color.plasma}
+              logY
+            />
           </div>
         </Card>
 

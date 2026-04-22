@@ -96,18 +96,26 @@ export function UniverseGarden() {
 
     const flat = snap.flat();
 
-    // Robust statistics: sort once, use 1st / 99th percentiles as colour-map
-    // bounds so a single extreme pixel can't wash the whole frame to one colour.
+    // Robust statistics: 1st / 99th percentiles for percentile-based colour-map
+    // bounds. True std drives both the "structure strength" meter and the
+    // vividness factor below.
     const sorted = flat.slice().sort((a, b) => a - b);
     const lo = sorted[Math.floor(sorted.length * 0.01)];
     const hi = sorted[Math.floor(sorted.length * 0.99)];
     const range = Math.max(hi - lo, 1e-6);
 
-    // True std for the "structure strength" meter
     let sum = 0; for (const v of flat) sum += v;
     const mean = sum / flat.length;
     let sumSq = 0; for (const v of flat) sumSq += (v - mean) ** 2;
-    setStrength(Math.sqrt(sumSq / flat.length));
+    const std = Math.sqrt(sumSq / flat.length);
+    setStrength(std);
+
+    // Vividness ∈ [0, 1]: 0 means flat ("grey mush"), 1 means strong
+    // cosmic-web contrast. We blend each pixel toward a dim violet
+    // midpoint by (1 − vividness) so low-amplitude fields genuinely
+    // look dull — instead of percentile-stretching to full colour.
+    const vividness = Math.min(1, std / 0.7);
+    const muteR = 38, muteG = 26, muteB = 62;
 
     const img = ctx.createImageData(N, N);
     for (let y = 0; y < N; y++) {
@@ -115,13 +123,12 @@ export function UniverseGarden() {
         // Normalise, clip into [0, 1]
         let v = (snap[y][x] - lo) / range;
         v = Math.max(0, Math.min(1, v));
-        // Aggressive gamma lifts the midtones so a mostly-Gaussian field
-        // looks colourful even when it sits around 0.3–0.5 of the range.
+        // Compress spread around midpoint when the field is nearly flat
+        v = 0.5 + (v - 0.5) * (0.15 + 0.85 * vividness);
+        // Aggressive gamma lifts the midtones at strong contrast.
         v = Math.pow(v, 0.45);
         const i = (y * N + x) * 4;
-        // Inferno-inspired 5-stop ramp: deep violet → magenta → orange →
-        // amber → cream. No near-black region so the canvas never looks
-        // empty even at low A_s.
+        // Inferno-inspired 5-stop ramp.
         let r, g, b;
         if (v < 0.25) {
           const u = v / 0.25;
@@ -136,9 +143,11 @@ export function UniverseGarden() {
           const u = (v - 0.75) / 0.25;
           r = 255; g = 165 + 80 * u; b = 25 + 190 * u;
         }
-        img.data[i] = r;
-        img.data[i + 1] = g;
-        img.data[i + 2] = b;
+        // Blend toward the dim midpoint based on vividness — the actual
+        // visual "серая каша ↔ космическая паутина" axis.
+        img.data[i]     = r * vividness + muteR * (1 - vividness);
+        img.data[i + 1] = g * vividness + muteG * (1 - vividness);
+        img.data[i + 2] = b * vividness + muteB * (1 - vividness);
         img.data[i + 3] = 255;
       }
     }
