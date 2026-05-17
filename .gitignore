@@ -39,3 +39,19 @@ node_modules/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Local agent/build/cache artifacts
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.ruff_cache/
+.mypy_cache/
+.next/
+out/
+tmp/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*:Zone.Identifier
+.pnpm-store/
+.astro/
